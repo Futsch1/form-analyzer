@@ -32,6 +32,9 @@ def get_field_list_from_document(document: trp.Document) -> typing.List[FieldLis
 
 
 def is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
+    if not len(words):
+        return True
+
     for block in blocks:
         for word in words:
             if 'Text' in block and word in block['Text']:
@@ -42,6 +45,7 @@ def is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
 
 def build(path: str, form_description: FormDescription) -> typing.List[ParsedForm]:
     file_names = sorted(glob.glob(path + '/*.json'))
+
     for i in range(0, len(file_names), form_description.pages):
         base_file_names = []
         responses = []
