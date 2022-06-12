@@ -3,10 +3,15 @@ __author__ = "Florian Fetz"
 
 import logging
 
-import analyze
-from conversion import pdf_to_image
-from textract import run_textract
+from .analyze import analyze
+from .conversion import pdf_to_image
+from .textract import run_textract
 
 __all__ = [pdf_to_image]
 
 form_analyzer_logger = logging.Logger('form_analyzer')
+if not form_analyzer_logger.hasHandlers():
+    handler = logging.StreamHandler()
+    log_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(log_format)
+    form_analyzer_logger.addHandler(handler)
