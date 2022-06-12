@@ -1,7 +1,7 @@
 import typing
 from copy import copy
 
-from forms import FieldList
+from .forms import FieldList
 
 
 class Filter:

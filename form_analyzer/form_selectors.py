@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 import trp
 
-from filter import Filter
-from forms import FieldList
+from .filter import Filter
+from .forms import FieldList
 
 
 def simple_str(s: str) -> str:
