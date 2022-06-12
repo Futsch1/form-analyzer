@@ -1,15 +1,24 @@
 import logging
 
-import forms
+from . import forms
 from openpyxl import Workbook
 
-from form_analyzer import form_analyzer_logger
+
+class FormDescriptionError(BaseException):
+    pass
 
 
 def analyze(form_description: str, form_folder: str, fields_debug: bool = False):
+    from form_analyzer import form_analyzer_logger
+
     form_analyzer_logger.log(logging.INFO, f'Loading form description from {form_description}')
+
     import importlib
     form = importlib.import_module(form_description)
+    if 'form_items' not in dir(form):
+        raise FormDescriptionError(f'Form description does not contain a "form_items" list')
+    if 'keywords_per_page' not in dir(form):
+        raise FormDescriptionError(f'Form description does not contain a "keywords_per_page" list')
 
     wb = Workbook()
     sheet = wb.active
@@ -24,7 +33,7 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
     parsed_forms = forms.build(form_folder, forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
 
     num_fields = 0
-    uncertains = []
+    uncertain_fields = []
 
     for parsed_form in parsed_forms:
         form_name = ", ".join(parsed_form.page_files)
@@ -36,7 +45,8 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
             lines = []
             for page_num, field in sorted(fields, key=lambda x: str(x[0]) + x[1].key.text):
                 value = '' if field.value is None else field.value.text
-                lines.append(f'{page_num} {field.key.text}: {field.geometry.boundingBox.left} {field.geometry.boundingBox.top} {value} {field.confidence}')
+                lines.append(f'{page_num} {field.key.text}: {field.geometry.boundingBox.left} '
+                             f'{field.geometry.boundingBox.top} {value} {field.confidence}')
 
             with open(f'{form_folder}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
                 f.write('\n'.join(lines))
@@ -48,7 +58,8 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
 
             for i, value in enumerate(values):
                 if value.uncertain:
-                    uncertains.append((sheet.max_row + 1, len(table_line) + 1 + i, parsed_form.page_files[form_field.get_page() - 1]))
+                    uncertain_fields.append((sheet.max_row + 1, len(table_line) + 1 + i,
+                                             parsed_form.page_files[form_field.get_page() - 1]))
 
             table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
             num_fields += 1
@@ -56,7 +67,7 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
         sheet.append(table_line)
 
     # Look for uncertain fields and add hyperlinks
-    for uncertain in uncertains:
+    for uncertain in uncertain_fields:
         uncertain_cell = sheet.cell(row=uncertain[0], column=uncertain[1])
         uncertain_cell.hyperlink = f'{uncertain[2]}'
         try:
@@ -70,7 +81,8 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
         row[0].hyperlink = f'{row[0].value.split(",")[0]}'
         row[0].style = 'Hyperlink'
 
-    form_analyzer_logger.log(logging.DEBUG, f'Found {len(uncertains)} uncertain fields in total {num_fields} fields')
+    form_analyzer_logger.log(logging.DEBUG, f'Found {len(uncertain_fields)} uncertain fields in total {num_fields} '
+                                            f'fields')
 
     sheet.freeze_panes = "A2"
     sheet.print_title_rows = '1:1'
