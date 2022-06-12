@@ -4,17 +4,17 @@ import logging
 import os
 import boto3
 
-from form_analyzer import form_analyzer_logger
-
 
 def run_textract(folder: str,
-                 aws_region_name: str,
-                 aws_access_key_id: str,
-                 aws_secret_access_key: str,
+                 aws_region_name: str = None,
+                 aws_access_key_id: str = None,
+                 aws_secret_access_key: str = None,
                  use_s3: bool = False,
                  s3_bucket_name: str = None,
                  s3_folder: str = ''):
-    for file_name in glob.glob(f'{folder}/*.png'):
+    from form_analyzer import form_analyzer_logger
+
+    for file_name in sorted(glob.glob(f'{folder}/*.png')):
         if os.path.exists(f'{file_name}.json'):
             form_analyzer_logger.log(logging.DEBUG, f'Skipping {file_name}')
             continue
