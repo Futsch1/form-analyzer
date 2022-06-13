@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from . import forms
 from openpyxl import Workbook
@@ -8,7 +9,7 @@ class FormDescriptionError(BaseException):
     pass
 
 
-def analyze(form_description: str, form_folder: str, fields_debug: bool = False):
+def __get_form_description(form_description: str):
     from form_analyzer import form_analyzer_logger
 
     form_analyzer_logger.log(logging.INFO, f'Loading form description from {form_description}')
@@ -20,6 +21,38 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
     if 'keywords_per_page' not in dir(form):
         raise FormDescriptionError(f'Form description does not contain a "keywords_per_page" list')
 
+    return form
+
+
+def dump_fields(form_folder: str, form_description: typing.Optional[str] = None):
+    if form_description is not None:
+        form = __get_form_description(form_description)
+        parsed_forms = forms.build(form_folder,
+                                   forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
+    else:
+        parsed_forms = forms.build(form_folder, forms.FormDescription(0, []))
+
+    from form_analyzer import form_analyzer_logger
+
+    form_analyzer_logger.log(logging.INFO, f'Dumping fields to {form_folder}')
+
+    for parsed_form in parsed_forms:
+        lines = []
+        for page_num, field in sorted(parsed_form.fields, key=lambda x: str(x[0]) + x[1].key.text):
+            value = '' if field.value is None else field.value.text
+            lines.append(f'{page_num} {field.key.text}: {field.geometry.boundingBox.left} '
+                         f'{field.geometry.boundingBox.top} {value} {field.confidence}')
+
+        with open(f'{form_folder}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
+            f.write('\n'.join(lines))
+
+
+def analyze(form_folder: str, form_description: str):
+    from form_analyzer import form_analyzer_logger
+
+    form = __get_form_description(form_description)
+    parsed_forms = forms.build(form_folder, forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
+
     wb = Workbook()
     sheet = wb.active
     sheet.title = 'Results'
@@ -30,8 +63,6 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
         table_headers.extend(form_field.headers())
     sheet.append(table_headers)
 
-    parsed_forms = forms.build(form_folder, forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
-
     num_fields = 0
     uncertain_fields = []
 
@@ -40,16 +71,6 @@ def analyze(form_description: str, form_folder: str, fields_debug: bool = False)
         form_analyzer_logger.log(logging.INFO, f'Analyzing {form_name}')
 
         fields = parsed_form.fields
-
-        if fields_debug:
-            lines = []
-            for page_num, field in sorted(fields, key=lambda x: str(x[0]) + x[1].key.text):
-                value = '' if field.value is None else field.value.text
-                lines.append(f'{page_num} {field.key.text}: {field.geometry.boundingBox.left} '
-                             f'{field.geometry.boundingBox.top} {value} {field.confidence}')
-
-            with open(f'{form_folder}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
-                f.write('\n'.join(lines))
 
         table_line = [form_name]
 

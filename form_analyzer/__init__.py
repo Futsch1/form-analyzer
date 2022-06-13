@@ -3,11 +3,9 @@ __author__ = "Florian Fetz"
 
 import logging
 
-from .analyze import analyze
+from .analyze import analyze, dump_fields
 from .conversion import pdf_to_image
 from .textract import run_textract
-
-__all__ = [pdf_to_image]
 
 form_analyzer_logger = logging.Logger('form_analyzer')
 if not form_analyzer_logger.hasHandlers():
