@@ -12,7 +12,8 @@ def one_page_to_two(_: int, image: Image) -> typing.List[typing.Tuple[str, Image
     return [('_1', left), ('_2', right)]
 
 
-form_analyzer.pdf_to_image('results', image_processor=one_page_to_two)
-form_analyzer.run_textract('results')
-form_analyzer.dump_fields('results')
-form_analyzer.analyze('results', 'example_form')
+if __name__ == '__main__':
+    form_analyzer.pdf_to_image('results', image_processor=one_page_to_two)
+    form_analyzer.run_textract('results')
+    form_analyzer.dump_fields('results')
+    form_analyzer.analyze('results', 'example_form')

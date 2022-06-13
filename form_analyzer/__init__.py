@@ -3,7 +3,7 @@ __author__ = "Florian Fetz"
 
 import logging
 
-from .analyze import analyze, dump_fields
+from .analyze import analyze, dump_fields, FormDescriptionError
 from .conversion import pdf_to_image
 from .textract import run_textract
 

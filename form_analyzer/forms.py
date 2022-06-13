@@ -49,6 +49,9 @@ def build(path: str, form_description: FormDescription) -> typing.List[ParsedFor
     if form_description.pages == 0:
         form_description.pages = len(file_names)
         form_description.words_on_page = [] * len(file_names)
+    else:
+        if len(file_names) == 0:
+            raise FileNotFoundError(f'No textract JSON result files found in {path}')
 
     for i in range(0, len(file_names), form_description.pages):
         base_file_names = []
