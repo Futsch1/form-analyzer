@@ -17,9 +17,9 @@ def __get_form_description(form_description: str):
     import importlib
     form = importlib.import_module(form_description)
     if 'form_items' not in dir(form):
-        raise FormDescriptionError(f'Form description does not contain a "form_items" list')
+        raise FormDescriptionError('Form description does not contain a "form_items" list')
     if 'keywords_per_page' not in dir(form):
-        raise FormDescriptionError(f'Form description does not contain a "keywords_per_page" list')
+        raise FormDescriptionError('Form description does not contain a "keywords_per_page" list')
 
     return form
 

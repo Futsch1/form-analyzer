@@ -7,6 +7,8 @@ from .analyze import analyze, dump_fields, FormDescriptionError
 from .conversion import pdf_to_image
 from .textract import run_textract
 
+__all__ = [analyze, dump_fields, FormDescriptionError, pdf_to_image, run_textract]
+
 form_analyzer_logger = logging.Logger('form_analyzer')
 if not form_analyzer_logger.hasHandlers():
     handler = logging.StreamHandler()

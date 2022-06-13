@@ -48,7 +48,8 @@ class Selector:
 
 class Select(Selector, ABC):
 
-    def __init__(self, selections: typing.List[str], filt: Filter, alternative: 'Selector' = None, additional: 'Selector' = None):
+    def __init__(self, selections: typing.List[str], filt: Filter, alternative: 'Selector' = None,
+                 additional: 'Selector' = None):
         self.selections = selections
         self.selection_matches = [Match.NOT_FOUND] * len(selections)
         self.uncertain_matches = []
@@ -79,7 +80,8 @@ class Select(Selector, ABC):
             decision = False
             for simple_field in simple_fields:
                 if simple_field.key == simple_selection:
-                    self.selection_matches[index] = Match.EXACT_SELECTED if simple_field.selected else Match.EXACT_NOT_SELECTED
+                    self.selection_matches[index] = Match.EXACT_SELECTED if simple_field.selected \
+                        else Match.EXACT_NOT_SELECTED
                     self.uncertain_matches[index] = simple_field.uncertain
                     decision = True
                     break
@@ -91,7 +93,8 @@ class Select(Selector, ABC):
                     s = difflib.SequenceMatcher(a=simple_selection, b=simple_field.key)
                     ratio = s.ratio()
                     if ratio > max_ratio:
-                        self.selection_matches[index] = Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED
+                        self.selection_matches[index] = Match.SIMILAR_SELECTED if simple_field.selected \
+                            else Match.SIMILAR_NOT_SELECTED
                         self.uncertain_matches[index] = simple_field.uncertain
                         decision = True
                         max_ratio = ratio
@@ -100,7 +103,8 @@ class Select(Selector, ABC):
                 # Third pass: part match
                 for simple_field in simple_fields:
                     if simple_field.key in simple_selection:
-                        self.selection_matches[index] = Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED
+                        self.selection_matches[index] = Match.SIMILAR_SELECTED if simple_field.selected \
+                            else Match.SIMILAR_NOT_SELECTED
                         self.uncertain_matches[index] = simple_field.uncertain
                         break
 

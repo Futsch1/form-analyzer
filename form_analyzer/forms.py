@@ -72,5 +72,3 @@ def build(path: str, form_description: FormDescription) -> typing.List[ParsedFor
             for field in page.form.fields:
                 fields.append((page_num, field))
         yield ParsedForm(base_file_names, fields)
-
-

@@ -95,4 +95,3 @@ class Selected(Filter):
                 filtered_fields.append(field_)
 
         return filtered_fields
-
