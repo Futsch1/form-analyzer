@@ -5,7 +5,7 @@ import logging
 
 from .analyze import analyze, dump_fields, FormDescriptionError, FormDescription, FormItem
 from .conversion import pdf_to_image, ProcessedImage
-from .form_selectors import Selector
+from .selectors import Selector
 from .textract import run_textract
 
 __all__ = [analyze, dump_fields, FormDescriptionError, pdf_to_image, run_textract, FormDescription, FormItem]

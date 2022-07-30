@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from openpyxl import Workbook
 
-from . import forms
-from .form_selectors import Selector
+from . import form_parser
+from .selectors import Selector
 
 
 @dataclass
@@ -40,10 +40,11 @@ def dump_fields(form_folder: str, form_description: typing.Optional[str] = None)
     if form_description is not None:
         form = __get_form_description(form_description)
         form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
-        parsed_forms = forms.build(form_folder,
-                                   forms.FormDescription(len(form_keywords_per_page), form_keywords_per_page))
+        parsed_forms = form_parser.build(form_folder,
+                                         form_parser.FormDescription(len(form_keywords_per_page),
+                                                                     form_keywords_per_page))
     else:
-        parsed_forms = forms.build(form_folder, forms.FormDescription(0, []))
+        parsed_forms = form_parser.build(form_folder, form_parser.FormDescription(0, []))
 
     from form_analyzer import form_analyzer_logger
 
@@ -68,7 +69,8 @@ def analyze(form_folder: str, form_description: str):
     form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
     form_description: FormDescription = form.form_description
 
-    parsed_forms = forms.build(form_folder, forms.FormDescription(len(form_keywords_per_page), form_keywords_per_page))
+    parsed_forms = form_parser.build(form_folder, form_parser.FormDescription(len(form_keywords_per_page),
+                                                                              form_keywords_per_page))
 
     wb = Workbook()
     sheet = wb.active
@@ -97,7 +99,7 @@ def analyze(form_folder: str, form_description: str):
             for i, value in enumerate(values):
                 if value.uncertain:
                     uncertain_fields.append((sheet.max_row + 1, len(table_line) + 1 + i,
-                                             parsed_form.page_files[form_item.selector.get_page() - 1]))
+                                             parsed_form.page_files[value.page]))
 
             table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
             num_fields += 1

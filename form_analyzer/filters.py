@@ -1,7 +1,7 @@
 import typing
 from copy import copy
 
-from .forms import FieldList
+from .form_parser import FieldList
 
 
 class Filter:
@@ -26,18 +26,6 @@ class Filter:
 
         return filtered_fields
 
-    def get_page(self):
-        page = self._get_page()
-        if page is None:
-            for _, other in self.__operations:
-                page = other.get_page()
-                if page is not None:
-                    break
-        return page
-
-    def _get_page(self):
-        return None
-
     def _filter(self, fields: FieldList) -> FieldList:
         raise NotImplementedError
 
@@ -46,9 +34,6 @@ class Pages(Filter):
     def __init__(self, pages: typing.List[int]):
         super(Pages, self).__init__()
         self.__pages = pages
-
-    def _get_page(self):
-        return self.__pages[0]
 
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
@@ -71,9 +56,6 @@ class Location(Filter):
         super(Location, self).__init__()
         self.__left = left
         self.__top = top
-
-    def get_page(self):
-        return None
 
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
