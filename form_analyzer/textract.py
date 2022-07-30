@@ -7,12 +7,12 @@ import typing
 import boto3
 from botocore.client import BaseClient
 
-from form_analyzer import form_analyzer_logger
-
 
 def __upload_to_s3(file_name: str, s3: BaseClient,
                    s3_bucket_name: str = None,
                    s3_folder: str = '') -> typing.Dict:
+    from form_analyzer import form_analyzer_logger
+
     s3_file_name = s3_folder + os.path.split(file_name)[1]
     if 'Contents' not in s3.list_objects(Bucket=s3_bucket_name, Prefix=s3_file_name):
         form_analyzer_logger.log(logging.INFO, f'Uploading to S3 as {s3_file_name}')
@@ -34,6 +34,8 @@ def run_textract(folder: str,
                  aws_secret_access_key: str = None,
                  s3_bucket_name: str = None,
                  s3_folder: str = ''):
+    from form_analyzer import form_analyzer_logger
+
     for file_name in sorted(glob.glob(f'{folder}/*.png')):
         if os.path.exists(f'{file_name}.json'):
             form_analyzer_logger.log(logging.DEBUG, f'Skipping {file_name}')
