@@ -52,17 +52,19 @@ class Page(Pages):
 class Location(Filter):
     optional_dimension = typing.Optional[typing.Tuple[float, float]]
 
-    def __init__(self, left: optional_dimension = None, top: optional_dimension = None):
+    def __init__(self, horizontal: optional_dimension = None, vertical: optional_dimension = None):
         super(Location, self).__init__()
-        self.__left = left
-        self.__top = top
+        self.__horizontal = horizontal
+        self.__vertical = vertical
 
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
         for field in fields:
             tx_field = field.field
-            if (self.__left is None or self.__left[0] < tx_field.geometry.boundingBox.left < self.__left[1]) and \
-                    (self.__top is None or self.__top[0] < tx_field.geometry.boundingBox.top < self.__top[1]):
+            if (self.__horizontal is None or self.__horizontal[0] < tx_field.geometry.boundingBox.left <
+                self.__horizontal[1]) and \
+                    (self.__vertical is None or self.__vertical[0] < tx_field.geometry.boundingBox.top <
+                     self.__vertical[1]):
                 filtered_fields.append(field)
 
         return filtered_fields
