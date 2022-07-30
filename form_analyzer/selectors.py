@@ -75,43 +75,50 @@ class Select(Selector, ABC):
     def _get_filtered_fields(self, form_fields: FieldList) -> typing.List[SimpleField]:
         return [SimpleField(field_with_page) for field_with_page in self.filter.filter(form_fields)]
 
+    def __check_exact_match(self, simple_selection: str, index: int, simple_fields: typing.List[SimpleField]) -> bool:
+        for simple_field in simple_fields:
+            if simple_field.key == simple_selection:
+                self.selection_matches[index] = Select.SelectionMatch(
+                    Match.EXACT_SELECTED if simple_field.selected else Match.EXACT_NOT_SELECTED,
+                    simple_field.page, simple_field.uncertain)
+                return True
+
+        return False
+
+    def __check_similar_match(self, simple_selection: str, index: int, simple_fields: typing.List[SimpleField]) -> bool:
+        match_found = False
+        max_ratio = 0.9
+        # Second pass: similar match
+        for simple_field in simple_fields:
+            s = difflib.SequenceMatcher(a=simple_selection, b=simple_field.key)
+            ratio = s.ratio()
+            if ratio > max_ratio:
+                self.selection_matches[index] = Select.SelectionMatch(
+                    Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED,
+                    simple_field.page, simple_field.uncertain)
+                max_ratio = ratio
+                match_found = True
+
+        return match_found
+
+    def __check_part_match(self, simple_selection: str, index: int, simple_fields: typing.List[SimpleField]):
+        for simple_field in simple_fields:
+            if simple_field.key in simple_selection:
+                self.selection_matches[index] = Select.SelectionMatch(
+                    Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED,
+                    simple_field.page, simple_field.uncertain)
+                break
+
     def _match_selections(self, simple_fields: typing.List[SimpleField]):
         self.selection_matches = [Select.SelectionMatch(Match.NOT_FOUND)] * len(self.selections)
 
         for index, selection in enumerate(self.selections):
             simple_selection = simple_str(selection)
 
-            # First pass: exact match
-            decision = False
-            for simple_field in simple_fields:
-                if simple_field.key == simple_selection:
-                    self.selection_matches[index] = Select.SelectionMatch(
-                        Match.EXACT_SELECTED if simple_field.selected else Match.EXACT_NOT_SELECTED,
-                        simple_field.page, simple_field.uncertain)
-                    decision = True
-                    break
-
-            if not decision:
-                max_ratio = 0.9
-                # Second pass: similar match
-                for simple_field in simple_fields:
-                    s = difflib.SequenceMatcher(a=simple_selection, b=simple_field.key)
-                    ratio = s.ratio()
-                    if ratio > max_ratio:
-                        self.selection_matches[index] = Select.SelectionMatch(
-                            Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED,
-                            simple_field.page, simple_field.uncertain)
-                        decision = True
-                        max_ratio = ratio
-
-            if not decision and len(selection) > 15:
-                # Third pass: part match
-                for simple_field in simple_fields:
-                    if simple_field.key in simple_selection:
-                        self.selection_matches[index] = Select.SelectionMatch(
-                            Match.SIMILAR_SELECTED if simple_field.selected else Match.SIMILAR_NOT_SELECTED,
-                            simple_field.page, simple_field.uncertain)
-                        break
+            if not self.__check_exact_match(simple_selection, index, simple_fields) and \
+                    not self.__check_similar_match(simple_selection, index, simple_fields) and \
+                    len(selection) > 15:
+                self.__check_part_match(simple_selection, index, simple_fields)
 
 
 class SingleSelect(Select):
