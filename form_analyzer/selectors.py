@@ -207,6 +207,25 @@ class TextField(Selector):
     def headers(self) -> typing.List[str]:
         return []
 
+    @staticmethod
+    def __form_value_from_match(field_with_page: FieldWithPage) -> FormValue:
+        tx_field = field_with_page.field
+        uncertain = tx_field.confidence < 40
+
+        if tx_field.value.text == 'NOT_SELECTED':
+            v = ''
+            uncertain = False
+        elif tx_field.value.text == 'SELECTED':
+            v = ''
+        else:
+            v = tx_field.value.text
+            if len(v) > 8:
+                uncertain = True
+            if len(v) == 0:
+                uncertain = False
+
+        return FormValue(v, field_with_page.page, uncertain)
+
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         filtered_fields = self.filter.filter(form_fields)
         form_value = FormValue('', filtered_fields[0].page, False)
@@ -216,24 +235,7 @@ class TextField(Selector):
 
             if self.key in simple_str(tx_field.key.text):
                 if tx_field.value is not None:
-                    uncertain = False
-
-                    if tx_field.confidence < 40:
-                        uncertain = True
-
-                    if tx_field.value.text == 'NOT_SELECTED':
-                        v = ''
-                        uncertain = False
-                    elif tx_field.value.text == 'SELECTED':
-                        v = ''
-                    else:
-                        v = tx_field.value.text
-                        if len(v) > 8:
-                            uncertain = True
-                        if len(v) == 0:
-                            uncertain = False
-
-                    form_value = FormValue(v, field_with_page.page, uncertain)
+                    form_value = self.__form_value_from_match(field_with_page)
                     break
 
         return [form_value]
@@ -248,6 +250,22 @@ class TextFieldWithCheckbox(Selector):
     def headers(self) -> typing.List[str]:
         return []
 
+    def __form_value_from_match(self, field_with_page: FieldWithPage) -> FormValue:
+        tx_field = field_with_page.field
+        uncertain = tx_field.confidence < 40
+
+        if tx_field.value is not None and tx_field.value.text not in ['NOT_SELECTED', 'SELECTED']:
+            v = tx_field.value.text.strip()
+        else:
+            v = tx_field.key.text.split(self.separator)[1]
+
+        if len(v) > 8:
+            uncertain = True
+        if len(v) == 0:
+            uncertain = False
+
+        return FormValue(v, field_with_page.page, uncertain)
+
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         filtered_fields = self.filter.filter(form_fields)
         form_value = FormValue('', filtered_fields[0].page, False)
@@ -255,23 +273,7 @@ class TextFieldWithCheckbox(Selector):
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
             if self.key in simple_str(tx_field.key.text):
-                uncertain = False
-
-                if tx_field.confidence < 40:
-                    uncertain = True
-
-                if tx_field.value is not None and tx_field.value.text not in ['NOT_SELECTED', 'SELECTED']:
-                    v = tx_field.value.text.strip()
-                else:
-                    v = tx_field.key.text.split(self.separator)[1]
-
-                if len(v) > 8:
-                    uncertain = True
-                if len(v) == 0:
-                    uncertain = False
-
-                form_value = FormValue(v, field_with_page.page, uncertain)
-
+                form_value = self.__form_value_from_match(field_with_page)
                 break
 
         return [form_value]
