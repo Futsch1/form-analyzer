@@ -6,7 +6,14 @@ from dataclasses import dataclass
 
 import trp
 
-FieldList = typing.List[typing.Tuple[int, trp.Field]]
+
+@dataclass
+class FieldWithPage:
+    page: int
+    field: trp.Field
+
+
+FieldList = typing.List[FieldWithPage]
 
 
 @dataclass
@@ -25,7 +32,7 @@ def get_field_list_from_document(document: trp.Document) -> typing.List[FieldLis
     fields = []
     for page_num, page in enumerate(document.pages):
         for field in page.form.fields:
-            fields.append((page_num, field))
+            fields.append(FieldWithPage(page_num, field))
         if page_num % 4 == 3:
             yield fields
             fields = []
@@ -70,5 +77,5 @@ def build(path: str, form_description: FormDescription) -> typing.List[ParsedFor
         fields: FieldList = []
         for page_num, page in enumerate(doc.pages):
             for field in page.form.fields:
-                fields.append((page_num, field))
+                fields.append((FieldWithPage(page_num, field)))
         yield ParsedForm(base_file_names, fields)

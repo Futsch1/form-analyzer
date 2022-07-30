@@ -3,3 +3,4 @@ amazon-textract-caller
 amazon-textract-response-parser
 pdf2image
 openpyxl
+coverage

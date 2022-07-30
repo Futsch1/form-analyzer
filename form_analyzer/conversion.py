@@ -2,11 +2,19 @@ import glob
 import logging
 import os
 import typing
+from dataclasses import dataclass
 
 import pdf2image
 from PIL.Image import Image
 
-ImageProcessor = typing.Callable[[int, Image], typing.List[typing.Tuple[str, Image]]]
+
+@dataclass
+class ProcessedImage:
+    image: Image
+    extension: str
+
+
+ImageProcessor = typing.Callable[[int, Image], typing.List[ProcessedImage]]
 
 
 def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
@@ -20,5 +28,5 @@ def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
 
         for image_index, image in enumerate(images):
             processed_images = image_processor(image_index, image)
-            for processed_extension, processed_image in processed_images:
-                processed_image.save(file_name_without_ext + processed_extension + '.png')
+            for processed_image in processed_images:
+                processed_image.image.save(file_name_without_ext + processed_image.extension + '.png')

@@ -53,7 +53,7 @@ class Pages(Filter):
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
         for field in fields:
-            if field[0] + 1 in self.__pages:
+            if field.page + 1 in self.__pages:
                 filtered_fields.append(field)
 
         return filtered_fields
@@ -77,11 +77,11 @@ class Location(Filter):
 
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
-        for field_ in fields:
-            field = field_[1]
-            if (self.__left is None or self.__left[0] < field.geometry.boundingBox.left < self.__left[1]) and \
-                    (self.__top is None or self.__top[0] < field.geometry.boundingBox.top < self.__top[1]):
-                filtered_fields.append(field_)
+        for field in fields:
+            tx_field = field.field
+            if (self.__left is None or self.__left[0] < tx_field.geometry.boundingBox.left < self.__left[1]) and \
+                    (self.__top is None or self.__top[0] < tx_field.geometry.boundingBox.top < self.__top[1]):
+                filtered_fields.append(field)
 
         return filtered_fields
 
@@ -89,9 +89,9 @@ class Location(Filter):
 class Selected(Filter):
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
-        for field_ in fields:
-            field = field_[1]
-            if field.value is not None and field.value.text == 'SELECTED':
-                filtered_fields.append(field_)
+        for field in fields:
+            tx_field = field.field
+            if tx_field.value is not None and tx_field.value.text == 'SELECTED':
+                filtered_fields.append(field)
 
         return filtered_fields

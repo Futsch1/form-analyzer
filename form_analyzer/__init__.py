@@ -4,7 +4,7 @@ __author__ = "Florian Fetz"
 import logging
 
 from .analyze import analyze, dump_fields, FormDescriptionError
-from .conversion import pdf_to_image
+from .conversion import pdf_to_image, ProcessedImage
 from .textract import run_textract
 
 __all__ = [analyze, dump_fields, FormDescriptionError, pdf_to_image, run_textract]

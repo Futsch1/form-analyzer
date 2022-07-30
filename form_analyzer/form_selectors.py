@@ -39,6 +39,8 @@ class SimpleField:
 
 
 class Selector:
+    key = None
+
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         raise NotImplementedError
 
@@ -48,14 +50,14 @@ class Selector:
 
 class Select(Selector, ABC):
 
-    def __init__(self, selections: typing.List[str], filt: Filter, alternative: 'Selector' = None,
+    def __init__(self, selections: typing.List[str], filter_: Filter, alternative: 'Selector' = None,
                  additional: 'Selector' = None):
         self.selections = selections
         self.selection_matches = [Match.NOT_FOUND] * len(selections)
         self.uncertain_matches = []
         self.alternative = alternative
         self.additional = additional
-        self.filter = filt
+        self.filter = filter_
 
     def get_page(self) -> int:
         return self.filter.get_page()
@@ -67,7 +69,7 @@ class Select(Selector, ABC):
             return []
 
     def get_simple_fields(self, form_fields: FieldList) -> typing.List[SimpleField]:
-        return [SimpleField(form_field) for _, form_field in self.filter.filter(form_fields)]
+        return [SimpleField(field_with_page.field) for field_with_page in self.filter.filter(form_fields)]
 
     def match_selections(self, simple_fields: typing.List[SimpleField]):
         self.selection_matches = [Match.NOT_FOUND] * len(self.selections)
@@ -177,9 +179,9 @@ class MultiSelect(Select):
 
 
 class TextField(Selector):
-    def __init__(self, key: str, filt: Filter):
+    def __init__(self, key: str, filter_: Filter):
         self.key = simple_str(key)
-        self.filter = filt
+        self.filter = filter_
 
     def get_page(self) -> int:
         return self.filter.get_page()
@@ -192,19 +194,20 @@ class TextField(Selector):
         v = ''
 
         filtered_fields = self.filter.filter(form_fields)
-        for _, form_field in filtered_fields:
-            if self.key in simple_str(form_field.key.text):
-                if form_field.value is not None:
-                    if form_field.confidence < 40:
+        for field_with_page in filtered_fields:
+            tx_field = field_with_page.field
+            if self.key in simple_str(tx_field.key.text):
+                if tx_field.value is not None:
+                    if tx_field.confidence < 40:
                         uncertain = True
 
-                    if form_field.value.text == 'NOT_SELECTED':
+                    if tx_field.value.text == 'NOT_SELECTED':
                         v = ''
                         uncertain = False
-                    elif form_field.value.text == 'SELECTED':
+                    elif tx_field.value.text == 'SELECTED':
                         v = ''
                     else:
-                        v = form_field.value.text
+                        v = tx_field.value.text
                         if len(v) > 8:
                             uncertain = True
                         if len(v) == 0:
@@ -216,10 +219,10 @@ class TextField(Selector):
 
 
 class TextFieldWithCheckbox(Selector):
-    def __init__(self, key: str, filt: Filter, separator: str = ':'):
+    def __init__(self, key: str, filter_: Filter, separator: str = ':'):
         self.key = simple_str(key)
         self.separator = separator
-        self.filter = filt
+        self.filter = filter_
 
     def get_page(self) -> int:
         return self.filter.get_page()
@@ -232,15 +235,16 @@ class TextFieldWithCheckbox(Selector):
         v = ''
 
         filtered_fields = self.filter.filter(form_fields)
-        for _, form_field in filtered_fields:
-            if self.key in simple_str(form_field.key.text):
-                if form_field.confidence < 40:
+        for field_with_page in filtered_fields:
+            tx_field = field_with_page.field
+            if self.key in simple_str(tx_field.key.text):
+                if tx_field.confidence < 40:
                     uncertain = True
 
-                if form_field.value is not None and form_field.value.text not in ['NOT_SELECTED', 'SELECTED']:
-                    v = form_field.value.text.strip()
+                if tx_field.value is not None and tx_field.value.text not in ['NOT_SELECTED', 'SELECTED']:
+                    v = tx_field.value.text.strip()
                 else:
-                    v = form_field.key.text.split(self.separator)[1]
+                    v = tx_field.key.text.split(self.separator)[1]
 
                 if len(v) > 8:
                     uncertain = True
@@ -253,8 +257,8 @@ class TextFieldWithCheckbox(Selector):
 
 
 class Number(TextField):
-    def __init__(self, key: str, filt: Filter, min_digits: int = 0, max_digits: int = 100):
-        super(Number, self).__init__(key, filt)
+    def __init__(self, key: str, filter_: Filter, min_digits: int = 0, max_digits: int = 100):
+        super(Number, self).__init__(key, filter_)
         self.min_digits = min_digits
         self.max_digits = max_digits
 

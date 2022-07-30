@@ -1,8 +1,9 @@
 import logging
 import typing
 
-from . import forms
 from openpyxl import Workbook
+
+from . import forms
 
 
 class FormDescriptionError(BaseException):
@@ -38,10 +39,11 @@ def dump_fields(form_folder: str, form_description: typing.Optional[str] = None)
 
     for parsed_form in parsed_forms:
         lines = []
-        for page_num, field in sorted(parsed_form.fields, key=lambda x: str(x[0]) + x[1].key.text):
-            value = '' if field.value is None else field.value.text
-            lines.append(f'{page_num} {field.key.text}: {field.geometry.boundingBox.left} '
-                         f'{field.geometry.boundingBox.top} {value} {field.confidence}')
+        for field_with_page in sorted(parsed_form.fields, key=lambda x: str(x.page) + x.field.key.text):
+            tx_field = field_with_page.field
+            value = '' if tx_field.value is None else tx_field.value.text
+            lines.append(f'{field_with_page.page} {tx_field.key.text}: {tx_field.geometry.boundingBox.left} '
+                         f'{tx_field.geometry.boundingBox.top} {value} {tx_field.confidence}')
 
         with open(f'{form_folder}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
             f.write('\n'.join(lines))
