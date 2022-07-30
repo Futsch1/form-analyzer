@@ -28,7 +28,7 @@ class FormDescription:
     words_on_page: typing.List[typing.List[str]]
 
 
-def get_field_list_from_document(document: trp.Document) -> typing.List[FieldList]:
+def __get_field_list_from_document(document: trp.Document) -> typing.List[FieldList]:
     fields = []
     for page_num, page in enumerate(document.pages):
         for field in page.form.fields:
@@ -38,7 +38,7 @@ def get_field_list_from_document(document: trp.Document) -> typing.List[FieldLis
             fields = []
 
 
-def is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
+def __is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
     if not len(words):
         return True
 
@@ -48,6 +48,26 @@ def is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
                 return True
 
     return False
+
+
+def __get_parsed_form(file_names: typing.List[str], form_description: FormDescription) -> ParsedForm:
+    base_file_names = []
+    responses = []
+
+    for file_name in file_names:
+        base_file_names.append(os.path.splitext(os.path.split(file_name)[1])[0])
+        with open(file_name) as f:
+            responses.append(json.load(f))
+
+    doc = trp.Document(responses)
+    for page, words in zip(doc.pages, form_description.words_on_page):
+        assert __is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in page {page}'
+
+    fields: FieldList = []
+    for page_num, page in enumerate(doc.pages):
+        for field in page.form.fields:
+            fields.append((FieldWithPage(page_num, field)))
+    return ParsedForm(base_file_names, fields)
 
 
 def parse(path: str, form_description: FormDescription) -> typing.List[ParsedForm]:
@@ -60,22 +80,5 @@ def parse(path: str, form_description: FormDescription) -> typing.List[ParsedFor
         if len(file_names) == 0:
             raise FileNotFoundError(f'No textract JSON result files found in {path}')
 
-    for i in range(0, len(file_names), form_description.pages):
-        base_file_names = []
-        responses = []
-
-        for page_index in range(form_description.pages):
-            file_name = file_names[i + page_index]
-            base_file_names.append(os.path.splitext(os.path.split(file_name)[1])[0])
-            with open(file_name) as f:
-                responses.append(json.load(f))
-
-        doc = trp.Document(responses)
-        for page, words in zip(doc.pages, form_description.words_on_page):
-            assert is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in page {page}'
-
-        fields: FieldList = []
-        for page_num, page in enumerate(doc.pages):
-            for field in page.form.fields:
-                fields.append((FieldWithPage(page_num, field)))
-        yield ParsedForm(base_file_names, fields)
+    return [__get_parsed_form(file_names[i:i + form_description.pages], form_description)
+            for i in range(0, len(file_names), form_description.pages)]
