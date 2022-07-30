@@ -6,7 +6,7 @@ from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from . import form_parser
-from .form_parser import ParsedForm
+from .form_parser import ParsedForm, FieldWithPage
 from .selectors import Selector
 
 
@@ -64,14 +64,12 @@ class FormToSheet:
         self.num_fields = 0
         self.uncertain_fields = 0
 
-    def add_parsed_form(self, form_name: str, parsed_form: ParsedForm):
-        uncertain_fields = []
-        fields = parsed_form.fields
-
+    def __get_table_line(self, form_name: str, parsed_form: ParsedForm) -> typing.Tuple[typing.List[str], typing.List[UncertainField]]:
         table_line = [form_name]
+        uncertain_fields = []
 
         for form_item in self.__form_description:
-            values = form_item.selector.values(fields)
+            values = form_item.selector.values(parsed_form.fields)
 
             for i, value in enumerate(values):
                 if value.uncertain:
@@ -81,10 +79,10 @@ class FormToSheet:
             table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
             self.num_fields += 1
 
-        self.__sheet.append(table_line)
-        row = self.__sheet[self.__sheet.max_row]
+        return table_line, uncertain_fields
 
-        # Post process added row
+    @staticmethod
+    def __annotate_uncertain_fields(uncertain_fields: typing.List[UncertainField], row):
         for uncertain in uncertain_fields:
             uncertain_cell = row[uncertain.col]
             uncertain_cell.hyperlink = f'{uncertain.page_file}'
@@ -94,6 +92,13 @@ class FormToSheet:
             except TypeError:
                 pass
             uncertain_cell.style = 'Hyperlink'
+
+    def add_parsed_form(self, form_name: str, parsed_form: ParsedForm):
+        table_line, uncertain_fields = self.__get_table_line(form_name, parsed_form)
+        self.__sheet.append(table_line)
+        row = self.__sheet[self.__sheet.max_row]
+
+        self.__annotate_uncertain_fields(uncertain_fields, row)
 
         row[0].hyperlink = f'{row[0].value.split(",")[0]}'
         row[0].style = 'Hyperlink'
