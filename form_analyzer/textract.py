@@ -32,7 +32,6 @@ def run_textract(folder: str,
                  aws_region_name: str = None,
                  aws_access_key_id: str = None,
                  aws_secret_access_key: str = None,
-                 use_s3: bool = False,
                  s3_bucket_name: str = None,
                  s3_folder: str = ''):
     for file_name in sorted(glob.glob(f'{folder}/*.png')):
@@ -42,7 +41,7 @@ def run_textract(folder: str,
 
         form_analyzer_logger.log(logging.INFO, f'Textracting {file_name}')
 
-        if use_s3:
+        if s3_bucket_name is not None:
             s3 = boto3.client('s3', region_name=aws_region_name, aws_access_key_id=aws_access_key_id,
                               aws_secret_access_key=aws_secret_access_key)
             document = __upload_to_s3(file_name, s3, s3_bucket_name, s3_folder)
