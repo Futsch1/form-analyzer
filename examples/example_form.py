@@ -1,6 +1,6 @@
 from form_analyzer import FormItem, FormDescription
-from form_analyzer.filter import Page, Location
-from form_analyzer.form_selectors import SingleSelect, TextFieldWithCheckbox, MultiSelect, TextField, Placeholder
+from form_analyzer.filters import Page, Location
+from form_analyzer.selectors import SingleSelect, TextFieldWithCheckbox, MultiSelect, TextField, Placeholder
 
 form_description: FormDescription = [
     FormItem('Start with a single select',
@@ -22,7 +22,7 @@ form_description: FormDescription = [
                                                               top=(.6, 1))))
              ),
     FormItem('Some text',
-             TextField('Now ask for some text', Page(1))
+             TextField('Now ask for some text', Page(1) | Page(2))
              ),
     FormItem('Second multi select',
              MultiSelect(

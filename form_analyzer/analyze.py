@@ -3,8 +3,10 @@ import typing
 from dataclasses import dataclass
 
 from openpyxl import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from . import form_parser
+from .form_parser import ParsedForm
 from .selectors import Selector
 
 
@@ -21,13 +23,13 @@ class FormDescriptionError(BaseException):
     pass
 
 
-def __get_form_description(form_description: str):
+def __get_form_description(form_module_name: str):
     from form_analyzer import form_analyzer_logger
 
-    form_analyzer_logger.log(logging.INFO, f'Loading form description from {form_description}')
+    form_analyzer_logger.log(logging.INFO, f'Loading form description from {form_module_name}')
 
     import importlib
-    form = importlib.import_module(form_description)
+    form = importlib.import_module(form_module_name)
     if 'form_description' not in dir(form):
         raise FormDescriptionError('Form description does not contain a "form_description" list')
     if 'keywords_per_page' not in dir(form):
@@ -36,15 +38,79 @@ def __get_form_description(form_description: str):
     return form
 
 
-def dump_fields(form_folder: str, form_description: typing.Optional[str] = None):
-    if form_description is not None:
-        form = __get_form_description(form_description)
+def __prepare_workbook(form_description: FormDescription) -> Workbook:
+    wb = Workbook()
+    sheet = wb.active
+    sheet.title = 'Results'
+    table_headers = ['']
+
+    for form_item in form_description:
+        table_headers.append(form_item.title)
+        table_headers.extend(form_item.selector.headers())
+    sheet.append(table_headers)
+
+    return wb
+
+
+class FormToSheet:
+    @dataclass
+    class UncertainField:
+        col: int
+        page_file: str
+
+    def __init__(self, sheet: Worksheet, form_description: FormDescription):
+        self.__sheet = sheet
+        self.__form_description = form_description
+        self.num_fields = 0
+        self.uncertain_fields = 0
+
+    def add_parsed_form(self, form_name: str, parsed_form: ParsedForm):
+        uncertain_fields = []
+        fields = parsed_form.fields
+
+        table_line = [form_name]
+
+        for form_item in self.__form_description:
+            values = form_item.selector.values(fields)
+
+            for i, value in enumerate(values):
+                if value.uncertain:
+                    uncertain_fields.append(FormToSheet.UncertainField(len(table_line) + i,
+                                                                       parsed_form.page_files[value.page]))
+
+            table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
+            self.num_fields += 1
+
+        self.__sheet.append(table_line)
+        row = self.__sheet[self.__sheet.max_row]
+
+        # Post process added row
+        for uncertain in uncertain_fields:
+            uncertain_cell = row[uncertain.col]
+            uncertain_cell.hyperlink = f'{uncertain.page_file}'
+            try:
+                if len(uncertain_cell.value) == 0:
+                    uncertain_cell.value = '???'
+            except TypeError:
+                pass
+            uncertain_cell.style = 'Hyperlink'
+
+        row[0].hyperlink = f'{row[0].value.split(",")[0]}'
+        row[0].style = 'Hyperlink'
+
+        self.uncertain_fields += len(uncertain_fields)
+
+
+def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None):
+    if form_module_name is not None:
+        form = __get_form_description(form_module_name)
         form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
-        parsed_forms = form_parser.build(form_folder,
-                                         form_parser.FormDescription(len(form_keywords_per_page),
-                                                                     form_keywords_per_page))
+        form_description = form_parser.FormDescription(len(form_keywords_per_page),
+                                                       form_keywords_per_page)
     else:
-        parsed_forms = form_parser.build(form_folder, form_parser.FormDescription(0, []))
+        form_description = form_parser.FormDescription(0, [])
+
+    parsed_forms = form_parser.parse(form_folder, form_description)
 
     from form_analyzer import form_analyzer_logger
 
@@ -69,60 +135,23 @@ def analyze(form_folder: str, form_description: str):
     form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
     form_description: FormDescription = form.form_description
 
-    parsed_forms = form_parser.build(form_folder, form_parser.FormDescription(len(form_keywords_per_page),
+    parsed_forms = form_parser.parse(form_folder, form_parser.FormDescription(len(form_keywords_per_page),
                                                                               form_keywords_per_page))
 
-    wb = Workbook()
+    wb = __prepare_workbook(form_description)
     sheet = wb.active
-    sheet.title = 'Results'
-    table_headers = ['']
 
-    for form_item in form_description:
-        table_headers.append(form_item.title)
-        table_headers.extend(form_item.selector.headers())
-    sheet.append(table_headers)
-
-    num_fields = 0
-    uncertain_fields = []
+    form_to_sheet = FormToSheet(sheet, form_description)
 
     for parsed_form in parsed_forms:
         form_name = ", ".join(parsed_form.page_files)
         form_analyzer_logger.log(logging.INFO, f'Analyzing {form_name}')
 
-        fields = parsed_form.fields
+        form_to_sheet.add_parsed_form(form_name, parsed_form)
 
-        table_line = [form_name]
-
-        for form_item in form_description:
-            values = form_item.selector.values(fields)
-
-            for i, value in enumerate(values):
-                if value.uncertain:
-                    uncertain_fields.append((sheet.max_row + 1, len(table_line) + 1 + i,
-                                             parsed_form.page_files[value.page]))
-
-            table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
-            num_fields += 1
-
-        sheet.append(table_line)
-
-    # Look for uncertain fields and add hyperlinks
-    for uncertain in uncertain_fields:
-        uncertain_cell = sheet.cell(row=uncertain[0], column=uncertain[1])
-        uncertain_cell.hyperlink = f'{uncertain[2]}'
-        try:
-            if len(uncertain_cell.value) == 0:
-                uncertain_cell.value = '???'
-        except TypeError:
-            pass
-        uncertain_cell.style = 'Hyperlink'
-
-    for row in sheet.rows:
-        row[0].hyperlink = f'{row[0].value.split(",")[0]}'
-        row[0].style = 'Hyperlink'
-
-    form_analyzer_logger.log(logging.DEBUG, f'Found {len(uncertain_fields)} uncertain fields in total {num_fields} '
-                                            f'fields')
+    form_analyzer_logger.log(logging.DEBUG,
+                             f'Found {form_to_sheet.uncertain_fields} uncertain fields in total {form_to_sheet.num_fields} '
+                             f'fields')
 
     sheet.freeze_panes = "A2"
     sheet.print_title_rows = '1:1'

@@ -50,7 +50,7 @@ def is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
     return False
 
 
-def build(path: str, form_description: FormDescription) -> typing.List[ParsedForm]:
+def parse(path: str, form_description: FormDescription) -> typing.List[ParsedForm]:
     file_names = sorted(glob.glob(path + '/*.json'))
 
     if form_description.pages == 0:
