@@ -1,9 +1,20 @@
 import logging
 import typing
+from dataclasses import dataclass
 
 from openpyxl import Workbook
 
-from . import forms, FormDescription
+from . import forms
+from .form_selectors import Selector
+
+
+@dataclass
+class FormItem:
+    title: str
+    selector: Selector
+
+
+FormDescription = typing.List[FormItem]
 
 
 class FormDescriptionError(BaseException):
@@ -17,8 +28,8 @@ def __get_form_description(form_description: str):
 
     import importlib
     form = importlib.import_module(form_description)
-    if 'form_items' not in dir(form):
-        raise FormDescriptionError('Form description does not contain a "form_items" list')
+    if 'form_description' not in dir(form):
+        raise FormDescriptionError('Form description does not contain a "form_description" list')
     if 'keywords_per_page' not in dir(form):
         raise FormDescriptionError('Form description does not contain a "keywords_per_page" list')
 
