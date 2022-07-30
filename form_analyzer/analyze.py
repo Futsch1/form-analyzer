@@ -6,7 +6,7 @@ from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from . import form_parser
-from .form_parser import ParsedForm, FieldWithPage
+from .form_parser import ParsedForm
 from .selectors import Selector
 
 
@@ -64,17 +64,17 @@ class FormToSheet:
         self.num_fields = 0
         self.uncertain_fields = 0
 
-    def __get_table_line(self, form_name: str, parsed_form: ParsedForm) -> typing.Tuple[typing.List[str], typing.List[UncertainField]]:
+    def __get_table_line(self, form_name: str, parsed_form: ParsedForm) -> \
+            typing.Tuple[typing.List[str], typing.List[UncertainField]]:
         table_line = [form_name]
         uncertain_fields = []
 
         for form_item in self.__form_description:
             values = form_item.selector.values(parsed_form.fields)
 
-            for i, value in enumerate(values):
-                if value.uncertain:
-                    uncertain_fields.append(FormToSheet.UncertainField(len(table_line) + i,
-                                                                       parsed_form.page_files[value.page]))
+            uncertain_fields.extend([FormToSheet.UncertainField(len(table_line) + i,
+                                                                parsed_form.page_files[value.page])
+                                     for i, value in enumerate(values) if value.uncertain])
 
             table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
             self.num_fields += 1
@@ -155,8 +155,8 @@ def analyze(form_folder: str, form_description: str):
         form_to_sheet.add_parsed_form(form_name, parsed_form)
 
     form_analyzer_logger.log(logging.DEBUG,
-                             f'Found {form_to_sheet.uncertain_fields} uncertain fields in total {form_to_sheet.num_fields} '
-                             f'fields')
+                             f'Found {form_to_sheet.uncertain_fields} uncertain fields in total '
+                             f'{form_to_sheet.num_fields} fields')
 
     sheet.freeze_panes = "A2"
     sheet.print_title_rows = '1:1'

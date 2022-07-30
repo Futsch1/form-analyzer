@@ -124,8 +124,8 @@ class Select(Selector, ABC):
 class SingleSelect(Select):
     def __form_value_from_match(self, select_index: int) -> FormValue:
         return FormValue(self.selections[select_index], self.selection_matches[select_index].page,
-                  self.selection_matches[select_index].uncertain,
-                  )
+                         self.selection_matches[select_index].uncertain,
+                         )
 
     def __get_matched_select_index(self) -> typing.Optional[int]:
         try:
