@@ -3,7 +3,7 @@ import typing
 
 from openpyxl import Workbook
 
-from . import forms
+from . import forms, FormDescription
 
 
 class FormDescriptionError(BaseException):
@@ -28,8 +28,9 @@ def __get_form_description(form_description: str):
 def dump_fields(form_folder: str, form_description: typing.Optional[str] = None):
     if form_description is not None:
         form = __get_form_description(form_description)
+        form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
         parsed_forms = forms.build(form_folder,
-                                   forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
+                                   forms.FormDescription(len(form_keywords_per_page), form_keywords_per_page))
     else:
         parsed_forms = forms.build(form_folder, forms.FormDescription(0, []))
 
@@ -53,16 +54,19 @@ def analyze(form_folder: str, form_description: str):
     from form_analyzer import form_analyzer_logger
 
     form = __get_form_description(form_description)
-    parsed_forms = forms.build(form_folder, forms.FormDescription(len(form.keywords_per_page), form.keywords_per_page))
+    form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
+    form_description: FormDescription = form.form_description
+
+    parsed_forms = forms.build(form_folder, forms.FormDescription(len(form_keywords_per_page), form_keywords_per_page))
 
     wb = Workbook()
     sheet = wb.active
     sheet.title = 'Results'
     table_headers = ['']
 
-    for field_name, form_field in form.form_items:
-        table_headers.append(field_name)
-        table_headers.extend(form_field.headers())
+    for form_item in form_description:
+        table_headers.append(form_item.title)
+        table_headers.extend(form_item.selector.headers())
     sheet.append(table_headers)
 
     num_fields = 0
@@ -76,13 +80,13 @@ def analyze(form_folder: str, form_description: str):
 
         table_line = [form_name]
 
-        for _, form_field in form.form_items:
-            values = form_field.values(fields)
+        for form_item in form_description:
+            values = form_item.selector.values(fields)
 
             for i, value in enumerate(values):
                 if value.uncertain:
                     uncertain_fields.append((sheet.max_row + 1, len(table_line) + 1 + i,
-                                             parsed_form.page_files[form_field.get_page() - 1]))
+                                             parsed_form.page_files[form_item.selector.get_page() - 1]))
 
             table_line.extend(list(map(lambda x: int(x.value) if x.value.isnumeric() else x.value, values)))
             num_fields += 1

@@ -41,10 +41,13 @@ class SimpleField:
 class Selector:
     key = None
 
-    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
+    def values(self, form_fields: FieldList) -> typing.List[FormValue]:  # pragma: no cover
         raise NotImplementedError
 
-    def headers(self) -> typing.List[str]:
+    def headers(self) -> typing.List[str]:  # pragma: no cover
+        raise NotImplementedError
+
+    def get_page(self) -> int:  # pragma: no cover
         raise NotImplementedError
 
 
@@ -68,10 +71,10 @@ class Select(Selector, ABC):
         else:
             return []
 
-    def get_simple_fields(self, form_fields: FieldList) -> typing.List[SimpleField]:
+    def _get_filtered_fields(self, form_fields: FieldList) -> typing.List[SimpleField]:
         return [SimpleField(field_with_page.field) for field_with_page in self.filter.filter(form_fields)]
 
-    def match_selections(self, simple_fields: typing.List[SimpleField]):
+    def _match_selections(self, simple_fields: typing.List[SimpleField]):
         self.selection_matches = [Match.NOT_FOUND] * len(self.selections)
         self.uncertain_matches = [False] * len(self.selections)
 
@@ -113,8 +116,8 @@ class Select(Selector, ABC):
 
 class SingleSelect(Select):
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
-        simple_fields = self.get_simple_fields(form_fields)
-        self.match_selections(simple_fields)
+        simple_fields = self._get_filtered_fields(form_fields)
+        self._match_selections(simple_fields)
 
         # Find best matching fields
         try:
@@ -152,8 +155,8 @@ class MultiSelect(Select):
         for i in range(len(self.selections) + 1):
             matches.append(FormValue(''))
 
-        simple_fields = self.get_simple_fields(form_fields)
-        self.match_selections(simple_fields)
+        simple_fields = self._get_filtered_fields(form_fields)
+        self._match_selections(simple_fields)
 
         any_found = False
         for index, match in enumerate(self.selection_matches):
@@ -278,6 +281,9 @@ class Number(TextField):
 
 
 class Placeholder(Selector):
+    def get_page(self) -> int:
+        return 0
+
     def headers(self) -> typing.List[str]:
         return []
 
