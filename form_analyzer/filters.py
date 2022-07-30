@@ -38,7 +38,7 @@ class Pages(Filter):
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
         for field in fields:
-            if field.page + 1 in self.__pages:
+            if field.page in self.__pages:
                 filtered_fields.append(field)
 
         return filtered_fields
