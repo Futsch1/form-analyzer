@@ -122,11 +122,12 @@ class Select(Selector, ABC):
 
 
 class SingleSelect(Select):
-    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
-        simple_fields = self._get_filtered_fields(form_fields)
-        self._match_selections(simple_fields)
+    def __form_value_from_match(self, select_index: int) -> FormValue:
+        return FormValue(self.selections[select_index], self.selection_matches[select_index].page,
+                  self.selection_matches[select_index].uncertain,
+                  )
 
-        # Find best matching fields
+    def __get_matched_select_index(self) -> typing.Optional[int]:
         try:
             select_index = self.selection_matches.index(Select.SelectionMatch(Match.EXACT_SELECTED))
         except ValueError:
@@ -134,11 +135,17 @@ class SingleSelect(Select):
                 select_index = self.selection_matches.index(Select.SelectionMatch(Match.SIMILAR_SELECTED))
             except ValueError:
                 select_index = None
+        return select_index
+
+    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
+        simple_fields = self._get_filtered_fields(form_fields)
+        self._match_selections(simple_fields)
+
+        # Find best matching fields
+        select_index = self.__get_matched_select_index()
 
         if select_index is not None:
-            return_value = [FormValue(self.selections[select_index], self.selection_matches[select_index].page,
-                                      self.selection_matches[select_index].uncertain,
-                                      )]
+            return_value = [self.__form_value_from_match(select_index)]
         else:
             not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
             if self.alternative is not None:
@@ -146,8 +153,7 @@ class SingleSelect(Select):
 
             elif self.selection_matches.count(not_found_match) == 1:
                 select_index = self.selection_matches.index(not_found_match)
-                match = self.selection_matches[select_index]
-                return_value = [FormValue(self.selections[select_index], match.page, match.uncertain)]
+                return_value = [self.__form_value_from_match(select_index)]
 
             else:
                 return_value = [FormValue('', simple_fields[0].page, self.selection_matches.count(not_found_match) > 1)]
