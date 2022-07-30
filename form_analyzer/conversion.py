@@ -23,10 +23,10 @@ def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
 
     for file_name in glob.glob(f'{folder}/*.pdf'):
         form_analyzer_logger.log(logging.INFO, f'Converting {file_name}')
-        images = pdf2image.convert_from_path(file_name, dpi=dpi, poppler_path=poppler_path)
+        pages = pdf2image.convert_from_path(file_name, dpi=dpi, poppler_path=poppler_path)
         file_name_without_ext = os.path.splitext(file_name)[0]
 
-        for image_index, image in enumerate(images):
-            processed_images = image_processor(image_index, image)
+        for page_index, image in enumerate(pages):
+            processed_images = image_processor(page_index, image)
             for processed_image in processed_images:
                 processed_image.image.save(file_name_without_ext + processed_image.extension + '.png')
