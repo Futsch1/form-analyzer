@@ -1,4 +1,4 @@
-# form-analyzer
+from form_analyzer.selectors import MultiSelect# form-analyzer
 
 [![Python package](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml/badge.svg)](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/form-analyzer/badge/?version=latest)](https://form-analyzer.readthedocs.io/en/latest/?badge=latest)

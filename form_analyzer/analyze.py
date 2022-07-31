@@ -7,7 +7,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from . import form_parser
 from .form_parser import ParsedForm
-from .selectors import Selector
+from .selectors.base import Selector
 
 
 @dataclass
