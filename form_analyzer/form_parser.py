@@ -39,15 +39,13 @@ def __get_field_list_from_document(document: trp.Document) -> typing.List[FieldL
 
 
 def __is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
-    if not len(words):
-        return True
+    word_found = False
 
     for block in blocks:
-        for word in words:
-            if 'Text' in block and word in block['Text']:
-                return True
+        if any(['Text' in block and word in block['Text'] for word in words]):
+            word_found = True
 
-    return False
+    return not len(words) or word_found
 
 
 def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> ParsedForm:
@@ -61,6 +59,7 @@ def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> Pa
 
     doc = trp.Document(responses)
     for page, words in zip(doc.pages, form_pages.words_on_page):
+        page: trp.Page
         assert __is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in page {page}'
 
     fields: FieldList = []
