@@ -1,5 +1,6 @@
 # form-analyzer
 
+[![Python package](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml/badge.svg)](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/form-analyzer/badge/?version=latest)](https://form-analyzer.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Futsch1/form-analyzer/badge.svg?branch=main)](https://coveralls.io/github/Futsch1/form-analyzer?branch=main)
 [![Maintainability](https://api.codeclimate.com/v1/badges/743708a08f4e8fd7bf7e/maintainability)](https://codeclimate.com/github/Futsch1/form-analyzer/maintainability)
@@ -134,7 +135,14 @@ indicate the full label but a unique part of it to compensate for potential dete
 - Number: Special case of TextField where only numbers may be entered
 - Placeholder: Results in an empty column in the Excel file
 
-Note that all text matching will be done case-insensitive.
+For single and multi selects, additional and alternative text fields can be given. The 
+content of the additional field is always added to the output and can be used to handle
+optional free text fields. The alternative text field is used when no selection is made.
+Both additional and alternative fields can be either TextField, Number or 
+TextFieldWithCheckbox.
+
+Note that all text matching will be done case-insensitive and with a certain fuzziness, so that
+no exact match is required.
 
 #### Filters
 
@@ -148,7 +156,7 @@ Filters can be combined using the & (and) and | (or) operator.
 - Location: Restricts the search to a part of the page indicated by horizontal and vertical ranges as page fractions.
 - Selected: Restricts the search to fields which are selected checkboxes
 
-Location filters apply to all selection possibilities for single and multi selects and to the key
+Location filters apply to all selection possibilities for single and multi selects and to the label
 for text and number fields.
 
 #### Examples

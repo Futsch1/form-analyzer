@@ -31,6 +31,13 @@ class Filter:
 
 
 class Pages(Filter):
+    """
+    Restricts the fields to the given pages.
+
+    Note that page numbers start with 0, so 0 represents the first page, 1 the second page etc.
+
+    :param pages: List of pages to take into account (starts with 0)
+    """
     def __init__(self, pages: typing.List[int]):
         super(Pages, self).__init__()
         self.__pages = pages
@@ -45,11 +52,23 @@ class Pages(Filter):
 
 
 class Page(Pages):
+    """
+    Restricts the fields to a single page.
+
+    Note that page numbers start with 0, so 0 represents the first page, 1 the second page etc.
+
+    :param page: Page to take into account
+    """
     def __init__(self, page: int):
         super(Page, self).__init__([page])
 
 
 class Location(Filter):
+    """
+    Restricts the fields to a given location on a page.
+
+    :param horizontal: Horizontal range to take into account (left, right)
+    """
     optional_dimension = typing.Optional[typing.Tuple[float, float]]
 
     def __init__(self, horizontal: optional_dimension = None, vertical: optional_dimension = None):
@@ -71,6 +90,9 @@ class Location(Filter):
 
 
 class Selected(Filter):
+    """
+    Restricts the fields to those that are selected (i.e. have a checked checkbox).
+    """
     def _filter(self, fields: FieldList) -> FieldList:
         filtered_fields = []
         for field in fields:

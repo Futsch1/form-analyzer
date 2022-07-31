@@ -120,8 +120,14 @@ class FormToSheet:
         self.uncertain_fields += len(uncertain_fields)
 
 
-def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None):
-    form_pages, _ = __get_form(form_module_name)
+def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None):
+    """
+    Dumps the analyzed fields from AWS Textract to text files to support debugging.
+
+    :param form_folder: Folder with the AWS Textract result files
+    :param form_description_module_name: Optional form description module name
+    """
+    form_pages, _ = __get_form(form_description_module_name)
     parsed_forms = form_parser.parse(form_folder, form_pages)
 
     from form_analyzer import form_analyzer_logger
@@ -130,7 +136,7 @@ def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None)
 
     for parsed_form in parsed_forms:
         lines = []
-        for field_with_page in sorted(parsed_form.fields, key=lambda x: str(x.page) + x.field.key.text):
+        for field_with_page in sorted(parsed_form.fields, key=lambda x: str(x.page) + x.field.label.text):
             tx_field = field_with_page.field
             value = '' if tx_field.value is None else tx_field.value.text
             lines.append(f'{field_with_page.page} {tx_field.key.text}: {tx_field.geometry.boundingBox.left} '
@@ -140,10 +146,18 @@ def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None)
             f.write('\n'.join(lines))
 
 
-def analyze(form_folder: str, form_module_name: str):
+def analyze(form_folder: str, form_description_module_name: str, excel_file_name: str = 'results'):
+    """
+    Analyzes the AWS Textract results in a folder based on a given form description and writes the results to
+    an Excel file.
+
+    :param form_folder: Folder with the AWS Textract result files
+    :param form_description_module_name: Name of the form description Python module
+    :param excel_file_name: Name of the result Excel file, default is 'results'
+    """
     from form_analyzer import form_analyzer_logger
 
-    form_pages, form_fields = __get_form(form_module_name)
+    form_pages, form_fields = __get_form(form_description_module_name)
 
     parsed_forms = form_parser.parse(form_folder, form_pages)
 
@@ -165,6 +179,6 @@ def analyze(form_folder: str, form_module_name: str):
     sheet.freeze_panes = "A2"
     sheet.print_title_rows = '1:1'
 
-    results_file = f'{form_folder}/result.xlsx'
+    results_file = f'{form_folder}/{excel_file_name}.xlsx'
     form_analyzer_logger.log(logging.INFO, f'Finished. Results saved in {results_file}')
     wb.save(results_file)

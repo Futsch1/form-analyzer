@@ -39,8 +39,6 @@ class SimpleField:
 
 
 class Selector:
-    key = None
-
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:  # pragma: no cover
         raise NotImplementedError
 
@@ -58,17 +56,17 @@ class Select(Selector, ABC):
         def __eq__(self, other):
             return self.match == other.match
 
-    def __init__(self, selections: typing.List[str], filter_: Filter, alternative: 'Selector' = None,
-                 additional: 'Selector' = None):
+    def __init__(self, selections: typing.List[str], filter_: Filter, alternative: typing.Union['TextField', 'TextFieldWithCheckbox'] = None,
+                 additional: typing.Union['TextField', 'TextFieldWithCheckbox'] = None):
         self.selections = selections
         self.selection_matches = [Select.SelectionMatch(Match.NOT_FOUND)] * len(self.selections)
         self.alternative = alternative
-        self.additional = additional
+        self.additional: TextField = additional
         self.filter = filter_
 
     def headers(self) -> typing.List[str]:
         if self.additional:
-            return [self.additional.key]
+            return [self.additional.label]
         else:
             return []
 
@@ -122,6 +120,24 @@ class Select(Selector, ABC):
 
 
 class SingleSelect(Select):
+    """
+    This selector handles single-select fields in a form.
+
+    It requires a list of selections where one can be selected. The selected field will
+    be represented as its value in the resulting Excel column.
+
+    It is possible to indicate an alternative selector that will be used if no selection was found (i.e.
+    to give a free text).
+
+    :param selections: List of possible selections
+    :param filter_: Filter
+    :param alternative: Alternative text field that is used when no selection was found
+    :param additional: Additional text field whose content is always added to the result
+    """
+    def __init__(self, selections: typing.List[str], filter_: Filter, alternative: typing.Union['TextField', 'TextFieldWithCheckbox'] = None,
+                 additional: typing.Union['TextField', 'TextFieldWithCheckbox'] = None):
+        super().__init__(selections, filter_, alternative, additional)
+
     def __form_value_from_match(self, select_index: int) -> FormValue:
         return FormValue(self.selections[select_index], self.selection_matches[select_index].page,
                          self.selection_matches[select_index].uncertain,
@@ -147,7 +163,10 @@ class SingleSelect(Select):
         if select_index is not None:
             return_value = [self.__form_value_from_match(select_index)]
         else:
+            # No selection found, try alternatives
             not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
+
+            # Alternative field given, take that one.
             if self.alternative is not None:
                 return_value = [self.alternative.values(form_fields)[0]]
 
@@ -165,6 +184,24 @@ class SingleSelect(Select):
 
 
 class MultiSelect(Select):
+    """
+    This selector handles multi-select fields in a form.
+
+    It requires a list of selections where none or several can be selected. Each selected field
+    will be represented by a "1" in the resulting Excel column.
+
+    It is possible to indicate an alternative selector that will be used if no selection was found (i.e.
+    to give a free text).
+
+    :param selections: List of possible selections
+    :param filter_: Filter
+    :param alternative: Alternative text field that is used when no selection was found
+    :param additional: Additional text field whose content is always added to the result
+    """
+    def __init__(self, selections: typing.List[str], filter_: Filter, alternative: typing.Union['TextField', 'TextFieldWithCheckbox'] = None,
+                 additional: typing.Union['TextField', 'TextFieldWithCheckbox'] = None):
+        super().__init__(selections, filter_, alternative, additional)
+
     def headers(self) -> typing.List[str]:
         return self.selections + super(MultiSelect, self).headers()
 
@@ -210,8 +247,14 @@ class MultiSelect(Select):
 
 
 class TextField(Selector):
-    def __init__(self, key: str, filter_: Filter):
-        self.key = simple_str(key)
+    """
+    Simple text field which is identified by a field label.
+
+    :param label: Label of the text field
+    :param filter_: Filter
+    """
+    def __init__(self, label: str, filter_: Filter):
+        self.label = simple_str(label)
         self.filter = filter_
 
     def headers(self) -> typing.List[str]:
@@ -243,7 +286,7 @@ class TextField(Selector):
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
 
-            if self.key in simple_str(tx_field.key.text):
+            if self.label in simple_str(tx_field.key.text):
                 if tx_field.value is not None:
                     form_value = self.__form_value_from_match(field_with_page)
                     break
@@ -252,8 +295,18 @@ class TextField(Selector):
 
 
 class TextFieldWithCheckbox(Selector):
-    def __init__(self, key: str, filter_: Filter, separator: str = ':'):
-        self.key = simple_str(key)
+    """
+    Text field with an additional checkbox.
+
+    The indicated text is always returned, if it shall only be done when the checkbox is selected,
+    use the Selected filter.
+
+    :param label: Label of the text field
+    :param filter_: Filter
+    :param separator: Separator between the checkbox with label and the free text, default ':'
+    """
+    def __init__(self, label: str, filter_: Filter, separator: str = ':'):
+        self.label = simple_str(label)
         self.separator = separator
         self.filter = filter_
 
@@ -282,7 +335,7 @@ class TextFieldWithCheckbox(Selector):
 
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
-            if self.key in simple_str(tx_field.key.text):
+            if self.label in simple_str(tx_field.key.text):
                 form_value = self.__form_value_from_match(field_with_page)
                 break
 
@@ -290,8 +343,18 @@ class TextFieldWithCheckbox(Selector):
 
 
 class Number(TextField):
-    def __init__(self, key: str, filter_: Filter, min_digits: int = 0, max_digits: int = 100):
-        super(Number, self).__init__(key, filter_)
+    """
+    Number field which is identified by a field label.
+
+    To check the validity of a number, the minimum and maximum number of digits can be indicated.
+
+    :param label: Number field label
+    :param filter_: Filter
+    :param min_digits: Minimum number of digits, set to 0 to ignore, default is 0
+    :param max_digits: Maximum number of digits, set to 0 to ignore, default is 0
+    """
+    def __init__(self, label: str, filter_: Filter, min_digits: int = 0, max_digits: int = 100):
+        super(Number, self).__init__(label, filter_)
         self.min_digits = min_digits
         self.max_digits = max_digits
 
@@ -311,6 +374,11 @@ class Number(TextField):
 
 
 class Placeholder(Selector):
+    """
+    Placeholder selector
+
+    This selector will appear as an empty column in the Excel sheet.
+    """
     def headers(self) -> typing.List[str]:
         return []
 

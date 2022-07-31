@@ -34,6 +34,19 @@ def run_textract(folder: str,
                  aws_secret_access_key: str = None,
                  s3_bucket_name: str = None,
                  s3_folder: str = ''):
+    """
+    Run AWS Textract on all PNG files in a folder.
+
+    The function can either upload all files to an S3 bucket and process them from there or upload them directly to Textract. The analysis results are saved
+    as JSON files. If a result JSON already exists for a PNG file, it will not be analyzed again.
+
+    :param folder: PNG folder name
+    :param aws_region_name: Optional AWS region name
+    :param aws_access_key_id: Optional AWS access key ID
+    :param aws_secret_access_key: Optional AWS secret access key
+    :param s3_bucket_name: Optional S3 bucket name, if given, the function will upload the files to S3
+    :param s3_folder: S3 bucket folder name, defaults to ''
+    """
     from form_analyzer import form_analyzer_logger
 
     for file_name in sorted(glob.glob(f'{folder}/*.png')):
