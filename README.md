@@ -1,6 +1,6 @@
 # form-analyzer
 
-[![Build](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml/badge.svg)](https://github.com/Futsch1/form-analyzer/actions/workflows/python-package.yml)
+[![Build](https://github.com/Futsch1/form-analyzer/actions/workflows/build.yml/badge.svg)](https://github.com/Futsch1/form-analyzer/actions/workflows/build.yml)
 [![Documentation Status](https://readthedocs.org/projects/form-analyzer/badge/?version=latest)](https://form-analyzer.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Futsch1/form-analyzer/badge.svg?branch=main)](https://coveralls.io/github/Futsch1/form-analyzer?branch=main)
 [![Maintainability](https://api.codeclimate.com/v1/badges/743708a08f4e8fd7bf7e/maintainability)](https://codeclimate.com/github/Futsch1/form-analyzer/maintainability)
