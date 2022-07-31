@@ -28,7 +28,7 @@ setup(name='form-analyzer',
       keywords=['textract', 'AWS', 'form', 'questionnaire', 'xlsx', 'excel'],
       url='https://github.com/futsch1/form-analyzer',
       project_urls={'Documentation': 'http://form-analyzer.rtfd.io'},
-      packages=find_packages(exclude=['tests', 'examples']),
+      packages=find_packages(exclude=['tests', 'example']),
       include_package_data=True,
       install_requires=[
           'boto3',
