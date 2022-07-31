@@ -168,21 +168,21 @@ class MultiSelect(Select):
     def headers(self) -> typing.List[str]:
         return self.selections + super(MultiSelect, self).headers()
 
-    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
-        def check_exact_or_part_match() -> bool:
-            match_found = False
-            for index, match in enumerate(self.selection_matches):
-                if match.match in [Match.EXACT_SELECTED, Match.SIMILAR_SELECTED]:
-                    matches[index + 1] = FormValue('1', match.page, match.uncertain)
-                    match_found = True
-            return match_found
+    def __check_exact_or_part_match(self, matches) -> bool:
+        match_found = False
+        for index, match in enumerate(self.selection_matches):
+            if match.match in [Match.EXACT_SELECTED, Match.SIMILAR_SELECTED]:
+                matches[index + 1] = FormValue('1', match.page, match.uncertain)
+                match_found = True
+        return match_found
 
+    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         matches = [FormValue('', 0)] * (len(self.selections) + 1)
 
         simple_fields = self._get_filtered_fields(form_fields)
         self._match_selections(simple_fields)
 
-        any_found = check_exact_or_part_match()
+        any_found = self.__check_exact_or_part_match(matches)
 
         # If no matches were found, the matching item might be not detected - but only if there are some missing
         not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
