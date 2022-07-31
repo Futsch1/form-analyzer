@@ -11,42 +11,56 @@ from .selectors import Selector
 
 
 @dataclass
-class FormItem:
+class FormField:
     title: str
     selector: Selector
 
 
-FormDescription = typing.List[FormItem]
+FormFields = typing.List[FormField]
 
 
 class FormDescriptionError(BaseException):
     pass
 
 
-def __get_form_description(form_module_name: str):
+def __get_form_description_module(form_module_name: str):
     from form_analyzer import form_analyzer_logger
 
     form_analyzer_logger.log(logging.INFO, f'Loading form description from {form_module_name}')
 
     import importlib
     form = importlib.import_module(form_module_name)
-    if 'form_description' not in dir(form):
-        raise FormDescriptionError('Form description does not contain a "form_description" list')
-    if 'keywords_per_page' not in dir(form):
+    if 'form_fields' not in dir(form) or not isinstance(form.form_fields, list):
+        raise FormDescriptionError('Form description does not contain a "form_fields" list')
+    if 'keywords_per_page' not in dir(form) or not isinstance(form.keywords_per_page, list):
         raise FormDescriptionError('Form description does not contain a "keywords_per_page" list')
 
     return form
 
 
-def __prepare_workbook(form_description: FormDescription) -> Workbook:
+def __get_form(form_module_name: typing.Optional[str]) -> typing.Tuple[form_parser.FormPages, FormFields]:
+    if form_module_name is not None:
+        form = __get_form_description_module(form_module_name)
+        form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
+        form_pages = form_parser.FormPages(len(form_keywords_per_page),
+                                           form_keywords_per_page)
+        form_fields = form.form_fields
+    else:
+        form_pages = form_parser.FormPages(0, [])
+        form_fields = []
+
+    return form_pages, form_fields
+
+
+def __prepare_workbook(form_fields: FormFields) -> Workbook:
     wb = Workbook()
     sheet = wb.active
     sheet.title = 'Results'
     table_headers = ['']
 
-    for form_item in form_description:
-        table_headers.append(form_item.title)
-        table_headers.extend(form_item.selector.headers())
+    for form_field in form_fields:
+        table_headers.append(form_field.title)
+        table_headers.extend(form_field.selector.headers())
     sheet.append(table_headers)
 
     return wb
@@ -58,9 +72,9 @@ class FormToSheet:
         col: int
         page_file: str
 
-    def __init__(self, sheet: Worksheet, form_description: FormDescription):
+    def __init__(self, sheet: Worksheet, form_fields: FormFields):
         self.__sheet = sheet
-        self.__form_description = form_description
+        self.__form_fields = form_fields
         self.num_fields = 0
         self.uncertain_fields = 0
 
@@ -69,8 +83,8 @@ class FormToSheet:
         table_line = [form_name]
         uncertain_fields = []
 
-        for form_item in self.__form_description:
-            values = form_item.selector.values(parsed_form.fields)
+        for form_field in self.__form_fields:
+            values = form_field.selector.values(parsed_form.fields)
 
             uncertain_fields.extend([FormToSheet.UncertainField(len(table_line) + i,
                                                                 parsed_form.page_files[value.page])
@@ -107,15 +121,8 @@ class FormToSheet:
 
 
 def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None):
-    if form_module_name is not None:
-        form = __get_form_description(form_module_name)
-        form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
-        form_description = form_parser.FormDescription(len(form_keywords_per_page),
-                                                       form_keywords_per_page)
-    else:
-        form_description = form_parser.FormDescription(0, [])
-
-    parsed_forms = form_parser.parse(form_folder, form_description)
+    form_pages, _ = __get_form(form_module_name)
+    parsed_forms = form_parser.parse(form_folder, form_pages)
 
     from form_analyzer import form_analyzer_logger
 
@@ -133,20 +140,17 @@ def dump_fields(form_folder: str, form_module_name: typing.Optional[str] = None)
             f.write('\n'.join(lines))
 
 
-def analyze(form_folder: str, form_description: str):
+def analyze(form_folder: str, form_module_name: str):
     from form_analyzer import form_analyzer_logger
 
-    form = __get_form_description(form_description)
-    form_keywords_per_page: typing.List[typing.List[str]] = form.keywords_per_page
-    form_description: FormDescription = form.form_description
+    form_pages, form_fields = __get_form(form_module_name)
 
-    parsed_forms = form_parser.parse(form_folder, form_parser.FormDescription(len(form_keywords_per_page),
-                                                                              form_keywords_per_page))
+    parsed_forms = form_parser.parse(form_folder, form_pages)
 
-    wb = __prepare_workbook(form_description)
+    wb = __prepare_workbook(form_fields)
     sheet = wb.active
 
-    form_to_sheet = FormToSheet(sheet, form_description)
+    form_to_sheet = FormToSheet(sheet, form_fields)
 
     for parsed_form in parsed_forms:
         form_name = ", ".join(parsed_form.page_files)

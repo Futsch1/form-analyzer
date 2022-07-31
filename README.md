@@ -12,7 +12,7 @@ No thorough Python programming abilities are required, but a basic understanding
 
 - Install form-analyzer using pip
 
-```commandline
+```
 pip install asn1editor
 ```
 
@@ -105,14 +105,14 @@ form fields. A description has to be provided as a Python module.
 
 This module needs to contain two variables:
 
-- form_description: The description itself
+- form_fields: The list of form fields
 - keywords_per_page: A list of keywords to expect on each page
 
-### form_description variable
+### form_fields variable
 
-This variable is a list of FormItem objects, which each describes a single field in the form. Each
-FormItem object consists of a title and a Selector object. The title is the column header in the Excel
-file and the Selector defines the type of the form item and its location.
+This variable is a list of FormField objects, which each describes a single field in the form. Each
+FormField object consists of a title and a Selector object. The title is the column header in the Excel
+file and the Selector defines the type of the form field and its location.
 
 **_Important_**:
 Note that the form description greatly affects the result of the form analyzing process. The AWS
@@ -138,7 +138,7 @@ Note that all text matching will be done case-insensitive.
 
 #### Filters
 
-Filters restrict the extracted form fields to search for the current form item. The lower the number
+Filters restrict the extracted form fields to search for the current form field. The lower the number
 of potential extracted form fields, the higher the probability of correct results.
 
 Filters can be combined using the & (and) and | (or) operator.
@@ -177,7 +177,7 @@ single_select_2 = SingleSelect(['First option', 'Second option', 'Third option']
 
 ### Keywords per page
 
-The field keywords_per_page in the form description is used to validate that a correct form is 
+The variable keywords_per_page in the form description is used to validate that a correct form is 
 being analyzed. It is a list of a list of strings. For each page, a list of strings can be given 
 where at least one of them has to be found in the strings discovered by Textract on the page.
 
@@ -193,7 +193,7 @@ keywords_per_page = [['welcome'], ['future', 'past']]
 ## Form analysis
 
 The data returned from AWS Textract and the form description are the inputs for the final
-analysis step that will try to locate all described form items, get their value in the respective
+analysis step that will try to locate all described form fields, get their value in the respective
 filled forms and put this in an Excel file.
 
 To run the analysis, use the following where the AWS Textract JSON files and PNGs are located

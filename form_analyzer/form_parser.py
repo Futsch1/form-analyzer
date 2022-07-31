@@ -23,7 +23,7 @@ class ParsedForm:
 
 
 @dataclass
-class FormDescription:
+class FormPages:
     pages: int
     words_on_page: typing.List[typing.List[str]]
 
@@ -50,7 +50,7 @@ def __is_any_word_in_blocks(blocks, words: typing.List[str]) -> bool:
     return False
 
 
-def __get_parsed_form(file_names: typing.List[str], form_description: FormDescription) -> ParsedForm:
+def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> ParsedForm:
     base_file_names = []
     responses = []
 
@@ -60,7 +60,7 @@ def __get_parsed_form(file_names: typing.List[str], form_description: FormDescri
             responses.append(json.load(f))
 
     doc = trp.Document(responses)
-    for page, words in zip(doc.pages, form_description.words_on_page):
+    for page, words in zip(doc.pages, form_pages.words_on_page):
         assert __is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in page {page}'
 
     fields: FieldList = []
@@ -70,15 +70,15 @@ def __get_parsed_form(file_names: typing.List[str], form_description: FormDescri
     return ParsedForm(base_file_names, fields)
 
 
-def parse(path: str, form_description: FormDescription) -> typing.List[ParsedForm]:
+def parse(path: str, form_pages: FormPages) -> typing.List[ParsedForm]:
     file_names = sorted(glob.glob(path + '/*.json'))
 
-    if form_description.pages == 0:
-        form_description.pages = len(file_names)
-        form_description.words_on_page = [] * len(file_names)
+    if form_pages.pages == 0:
+        form_pages.pages = len(file_names)
+        form_pages.words_on_page = [] * len(file_names)
     else:
         if len(file_names) == 0:
             raise FileNotFoundError(f'No textract JSON result files found in {path}')
 
-    return [__get_parsed_form(file_names[i:i + form_description.pages], form_description)
-            for i in range(0, len(file_names), form_description.pages)]
+    return [__get_parsed_form(file_names[i:i + form_pages.pages], form_pages)
+            for i in range(0, len(file_names), form_pages.pages)]
