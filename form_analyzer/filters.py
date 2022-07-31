@@ -67,7 +67,13 @@ class Location(Filter):
     """
     Restricts the fields to a given location on a page.
 
-    :param horizontal: Horizontal range to take into account (left, right)
+    Restrictions are indicated as ratios in the range [0.0, 1.0], so the tuple (.0, 1.0) would indicate the full
+    range and (.5, 1.0) the right/bottom half and (.0, 0.5) the left/upper half.
+
+    If a dimension is None, it is not checked (and equal to the full range (.0, 1.0)).
+
+    :param horizontal: Horizontal range to take into account (left, right), default None
+    :param vertical: Vertical range to take into account (top, bottom), default None
     """
     optional_dimension = typing.Optional[typing.Tuple[float, float]]
 

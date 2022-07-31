@@ -12,4 +12,6 @@
 :maxdepth: 2
 
 usage
+selectors
+filters
 ```
