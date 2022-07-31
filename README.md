@@ -1,5 +1,6 @@
 # form-analyzer
 
+[![Documentation Status](https://readthedocs.org/projects/form-analyzer/badge/?version=latest)](https://form-analyzer.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Futsch1/form-analyzer/badge.svg?branch=main)](https://coveralls.io/github/Futsch1/form-analyzer?branch=main)
 [![Maintainability](https://api.codeclimate.com/v1/badges/743708a08f4e8fd7bf7e/maintainability)](https://codeclimate.com/github/Futsch1/form-analyzer/maintainability)
 
@@ -16,12 +17,18 @@ pip install asn1editor
 ```
 
 - Get an AWS account and create an access key (under security credentials)
-- If your scanned questionnaires are in PDF format, install the required tools for [pdf2image](https://pypi.org/project/pdf2image/)
+- If your scanned questionnaires are in PDF format, install the required tools
+  for [pdf2image](https://pypi.org/project/pdf2image/)
+
+## Example
+
+For a comprehensive example, see the 
+[example folder in this project](https://github.com/Futsch1/form-analyzer/tree/main/example)
 
 ## Prepare questionnaires
 
-In order to process your input data, the questionnaires need to be converted to a proper format. 
-form-analyzer requires PNG files for the upload to AWS Textract. If your data is already in this 
+In order to process your input data, the questionnaires need to be converted to a proper format.
+form-analyzer requires PNG files for the upload to AWS Textract. If your data is already in this
 format, make sure that their lexicographic order corresponds to the number of pages in your form.
 
 Example:
@@ -54,6 +61,7 @@ The following example shows how to split a single PDF page into two images:
 ```python
 import form_analyzer
 
+
 def one_page_to_two(_: int, image):
     left = image.crop((0, 0, image.width // 2, image.height))
     right = image.crop((image.width // 2, 0, image.width, image.height))
@@ -65,7 +73,7 @@ form_analyzer.pdf_to_image('questionnaires', image_processor=one_page_to_two)
 ```
 
 The argument image_processor specifies a function that receives the current PDF page number (starting with 0)
-and an [Image](https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image) object. 
+and an [Image](https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image) object.
 It returns a list of form_analyzer.ProcessedImage objects that contain an Image object and a file name suffix.
 
 The resulting images are stored in the same folder as the PDF source files.
@@ -73,7 +81,7 @@ The resulting images are stored in the same folder as the PDF source files.
 ## AWS Textract
 
 The converted images can now be processed by AWS Textract to extract the form data. You can either
-provide your AWS access key and region as parameters or set them up according to 
+provide your AWS access key and region as parameters or set them up according to
 [this manual](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
 It is also possible to upload the images to an AWS S3 bucket and analyze them from there. If that's
@@ -87,7 +95,7 @@ import form_analyzer
 form_analyzer.run_textract('questionnaires')
 ```
 
-The result data is saved as JSON files in the target folder. Before using AWS Textract, the 
+The result data is saved as JSON files in the target folder. Before using AWS Textract, the
 function checks if result data is already present. If that is the case, the Textract call is skipped.
 
 ## Form description
@@ -95,7 +103,8 @@ function checks if result data is already present. If that is the case, the Text
 In order to convert your form to a meaningful Excel file, form-analyzer needs to know the expected
 form fields. A description has to be provided as a Python module.
 
-This module needs to contain two variables: 
+This module needs to contain two variables:
+
 - form_description: The description itself
 - keywords_per_page: A list of keywords to expect on each page
 
@@ -106,7 +115,7 @@ FormItem object consists of a title and a Selector object. The title is the colu
 file and the Selector defines the type of the form item and its location.
 
 **_Important_**:
-Note that the form description greatly affects the result of the form analyzing process. The AWS 
+Note that the form description greatly affects the result of the form analyzing process. The AWS
 Textract process often has slight errors and does not yield 100% correct results. The form descriptions
 needs to account for that and on the one hand provide a detailed description of where to look for
 form fields and on the other hand needs to keep search strings generic to help to detect the correct
@@ -114,8 +123,8 @@ field.
 
 #### Selectors
 
-Some selectors require a key and all require filter for initialization. The key is the label 
-of the form field which is searched in the extracted form data. It is recommended to not 
+Some selectors require a key and all require filter for initialization. The key is the label
+of the form field which is searched in the extracted form data. It is recommended to not
 indicate the full label but a unique part of it to compensate for potential detection errors.
 
 - SingleSelect: Describes a list of checkboxes where only one may be marked
@@ -124,6 +133,8 @@ indicate the full label but a unique part of it to compensate for potential dete
 - TextFieldWithCheckbox: Describes a text input field with an additional checkbox
 - Number: Special case of TextField where only numbers may be entered
 - Placeholder: Results in an empty column in the Excel file
+
+Note that all text matching will be done case-insensitive.
 
 #### Filters
 
@@ -137,19 +148,61 @@ Filters can be combined using the & (and) and | (or) operator.
 - Location: Restricts the search to a part of the page indicated by horizontal and vertical ranges as page fractions.
 - Selected: Restricts the search to fields which are selected checkboxes
 
-#### Examples
+Location filters apply to all selection possibilities for single and multi selects and to the key
+for text and number fields.
 
-SingleSelect on the first page:
+#### Examples
 
 ```python
 from form_analyzer.filters import *
 from form_analyzer.selectors import *
 
-single_select_on_first_page = SingleSelect(['First option', 'Second option'], Page(0))
+# Single select on the first page with two options
+single_select = SingleSelect(['First option', 'Second option'], 
+                             Page(0))
 
-multi_select_on_top_half_of_second_page = MultiSelect(['First option', 'Second option'], 
-                                                      Page(0) & Location(vertical=(.0, .5)))
-text_field_on_top_left_half_of_first_page = TextField('Field label', 
-                                                      Page(0) & Location(horizontal=(.0, .5), vertical=(.0, .5)))
+# Multi select on the top half of the first page
+multi_select = MultiSelect(['First option', 'Second option'],
+                           Page(0) & Location(vertical=(.0, .5)))
 
+# Text field on the upper left quarter of the first page
+text_field = TextField('Field label',
+                       Page(0) & Location(horizontal=(.0, .5), vertical=(.0, .5)))
+
+# Single select on the lowest third of the second page or the top half of the third page
+single_select_2 = SingleSelect(['First option', 'Second option', 'Third option'],
+                               (Page(1) & Location(vertical=(.66, 1))) |
+                               (Page(2) & Location(vertical=(.0, .5))))
+```
+
+### Keywords per page
+
+The field keywords_per_page in the form description is used to validate that a correct form is 
+being analyzed. It is a list of a list of strings. For each page, a list of strings can be given 
+where at least one of them has to be found in the strings discovered by Textract on the page.
+
+If the list is empty or empty for a single page, no validation is performed.
+
+Example
+
+```python
+# Will search for 'welcome' on the first page and for 'future' or 'past' on the second
+keywords_per_page = [['welcome'], ['future', 'past']]
+```
+
+## Form analysis
+
+The data returned from AWS Textract and the form description are the inputs for the final
+analysis step that will try to locate all described form items, get their value in the respective
+filled forms and put this in an Excel file.
+
+To run the analysis, use the following where the AWS Textract JSON files and PNGs are located
+in the folder "questionnaires" and a Python module "my_form" exists in the Python search path 
+that contains the form description.
+(this should usually be the current folder, where a "my_form.py" is located).
+
+```python
+import form_analyzer
+
+form_analyzer.analyze('questionnaires', 'my_form')
 ```
