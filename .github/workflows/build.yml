@@ -34,7 +34,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          coverage run --source=form_analyzer -a -m pytest
+          coverage run -a -m pytest
           coverage html -d coverage
 
       - name: Coveralls

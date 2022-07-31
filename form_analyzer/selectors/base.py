@@ -36,10 +36,10 @@ class SimpleField:
 
 
 class Selector:
-    def values(self, form_fields: FieldList) -> typing.List[FormValue]:  # pragma: no cover
+    def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         raise NotImplementedError
 
-    def headers(self) -> typing.List[str]:  # pragma: no cover
+    def headers(self) -> typing.List[str]:
         raise NotImplementedError
 
 

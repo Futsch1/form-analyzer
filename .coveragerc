@@ -1,2 +1,12 @@
 [run]
 relative_files = True
+source = form_analyzer
+
+[report]
+omit=form_analyzer/textract.py
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
