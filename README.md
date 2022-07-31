@@ -1,4 +1,4 @@
-# form-analyzer
+# form-analyzer - A library that uses AWS Textract to automatically evaluate filled forms
 
 [![Build](https://github.com/Futsch1/form-analyzer/actions/workflows/build.yml/badge.svg)](https://github.com/Futsch1/form-analyzer/actions/workflows/build.yml)
 [![Documentation Status](https://readthedocs.org/projects/form-analyzer/badge/?version=latest)](https://form-analyzer.readthedocs.io/en/latest/?badge=latest)
@@ -17,7 +17,7 @@ No thorough Python programming abilities are required, but a basic understanding
 pip install form-analyzer
 ```
 
-- Get an AWS account and create an access key (under security credentials)
+- Get an AWS account and [create an access key](https://aws.amazon.com/premiumsupport/knowledge-center/create-access-key/)
 - If your scanned questionnaires are in PDF format, install the required tools
   for [pdf2image](https://pypi.org/project/pdf2image/)
 
@@ -144,6 +144,8 @@ TextFieldWithCheckbox.
 Note that all text matching will be done case-insensitive and with a certain fuzziness, so that
 no exact match is required.
 
+See also (the documentation)[https://form-analyzer.readthedocs.io/en/latest/selectors.html].
+
 #### Filters
 
 Filters restrict the extracted form fields to search for the current form field. The lower the number
@@ -161,6 +163,8 @@ for text and number fields.
 
 Note that when working with location filters and scanned form pages, the position of certain fields on
 the page must be similar for each scan.
+
+See also (the documentation)[https://form-analyzer.readthedocs.io/en/latest/filters.html].
 
 #### Examples
 
