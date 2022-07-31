@@ -45,10 +45,9 @@ class TextField(Selector):
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
 
-            if self.label in simple_str(tx_field.key.text):
-                if tx_field.value is not None:
-                    form_value = self.__form_value_from_match(field_with_page)
-                    break
+            if self.label in simple_str(tx_field.key.text) and tx_field.value is not None:
+                form_value = self.__form_value_from_match(field_with_page)
+                break
 
         return [form_value]
 
