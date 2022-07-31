@@ -6,7 +6,7 @@ from setuptools import setup
 
 def find_version():
     return re.search(r'^__version__ = "(.*)"$',
-                     open('form-analyzer/__init__.py', 'r').read(),
+                     open('form_analyzer/__init__.py', 'r').read(),
                      re.MULTILINE).group(1)
 
 
