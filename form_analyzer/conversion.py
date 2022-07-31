@@ -19,6 +19,14 @@ ImageProcessor = typing.Callable[[int, Image], typing.List[ProcessedImage]]
 
 def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
                  image_processor: ImageProcessor = lambda image_index, img: [(str(image_index + 1), img)]):
+    """
+    Converts PDF files in a folder to PNG images
+
+    :param folder:
+    :param dpi:
+    :param poppler_path:
+    :param image_processor:
+    """
     from form_analyzer import form_analyzer_logger
 
     for file_name in glob.glob(f'{folder}/*.pdf'):

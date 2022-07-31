@@ -12,11 +12,22 @@ author = 'Florian Fetz'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 
-extensions = ['myst_parser']
+extensions = ['myst_parser',
+              'sphinx.ext.duration',
+              'sphinx.ext.autosectionlabel',
+              'sphinx.ext.autodoc',
+              'sphinx.ext.intersphinx',
+              ]
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None)
+}
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
