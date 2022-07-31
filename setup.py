@@ -37,6 +37,10 @@ setup(name='form-analyzer',
           'pdf2image',
           'openpyxl'
       ],
+      extras_require={
+          'dev': ['coverage'],
+          'doc': ['sphinx', 'myst-parser']
+      },
       test_suite="tests",
       python_requires='>=3.7',
       entry_points={
