@@ -53,7 +53,7 @@ class Select(Selector, ABC):
     class SelectionMatch:
         match: Match
         page: int = 0
-        uncertain: bool = False
+        uncertain: bool = True
 
         def __eq__(self, other):
             return self.match == other.match
@@ -176,8 +176,16 @@ class MultiSelect(Select):
                 match_found = True
         return match_found
 
+    @staticmethod
+    def __populate_matches(num_matches: int):
+        matches = []
+        for i in range(num_matches):
+            matches.append(FormValue('', 0))
+
+        return matches
+
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
-        matches = [FormValue('', 0)] * (len(self.selections) + 1)
+        matches = self.__populate_matches(len(self.selections) + 1)
 
         simple_fields = self._get_filtered_fields(form_fields)
         self._match_selections(simple_fields)
@@ -295,9 +303,9 @@ class Number(TextField):
         if len(number_value.value):
             value = ''.join(list(filter(str.isdecimal, number_value.value.replace('O', '0'))))
             if self.min_digits > len(value) or self.max_digits < len(value):
-                return [FormValue('', True)]
+                return [FormValue('', number_value.page, True)]
         else:
-            return [FormValue('', True)]
+            return [FormValue('', number_value.page, True)]
 
         return [FormValue(value, number_value.page, number_value.uncertain)]
 
