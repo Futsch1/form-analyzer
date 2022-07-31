@@ -136,7 +136,7 @@ def dump_fields(form_folder: str, form_description_module_name: typing.Optional[
 
     for parsed_form in parsed_forms:
         lines = []
-        for field_with_page in sorted(parsed_form.fields, key=lambda x: str(x.page) + x.field.label.text):
+        for field_with_page in sorted(parsed_form.fields, key=lambda tx_field_: str(tx_field_.page) + tx_field_.field.key.text):
             tx_field = field_with_page.field
             value = '' if tx_field.value is None else tx_field.value.text
             lines.append(f'{field_with_page.page} {tx_field.key.text}: {tx_field.geometry.boundingBox.left} '
