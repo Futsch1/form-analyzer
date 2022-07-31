@@ -38,7 +38,7 @@ setup(name='form-analyzer',
           'openpyxl'
       ],
       test_suite="tests",
-      python_requires='>=3.6',
+      python_requires='>=3.7',
       entry_points={
 
       })
