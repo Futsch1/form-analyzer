@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/examples/results/result.xlsx
+
+# Custom
+.idea
