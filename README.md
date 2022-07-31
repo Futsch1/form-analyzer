@@ -14,7 +14,7 @@ No thorough Python programming abilities are required, but a basic understanding
 - Install form-analyzer using pip
 
 ```
-pip install asn1editor
+pip install form-analyzer
 ```
 
 - Get an AWS account and create an access key (under security credentials)
@@ -159,6 +159,9 @@ Filters can be combined using the & (and) and | (or) operator.
 Location filters apply to all selection possibilities for single and multi selects and to the label
 for text and number fields.
 
+Note that when working with location filters and scanned form pages, the position of certain fields on
+the page must be similar for each scan.
+
 #### Examples
 
 ```python
@@ -206,11 +209,23 @@ filled forms and put this in an Excel file.
 
 To run the analysis, use the following where the AWS Textract JSON files and PNGs are located
 in the folder "questionnaires" and a Python module "my_form" exists in the Python search path 
-that contains the form description.
-(this should usually be the current folder, where a "my_form.py" is located).
+that contains the form description (this should usually be the current folder, where a "my_form.py" is 
+located). You can optionally pass the name of the resulting Excel file.
 
 ```python
 import form_analyzer
 
-form_analyzer.analyze('questionnaires', 'my_form')
+form_analyzer.analyze('questionnaires', 'my_form', 'my_form_results')
 ```
+
+### Results
+
+After analyzing, an Excel file is created. The first column always contains a link to the image of the 
+first page of the form. Each uncertain field (meaning that there was some uncertainty during the 
+analysis and the result might be incorrect) is also linked to the image of the page where the field
+is located.
+
+Usually, it is required to manually check the results. The Excel file is not perfect and depending
+on the complexity of the form, the quality of the inputs, the PDF quality etc. the file might contain
+errors. The number of found uncertain fields is printed after the analysis and can be used as a coarse
+measure for the quality of the results.
