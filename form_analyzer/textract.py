@@ -96,3 +96,4 @@ def run_textract(folder: str,
     for file_name in sorted(glob.glob(f'{folder}/*.png')):
         executor.submit(textract.query_aws, file_name)
 
+    executor.shutdown(wait=True)
