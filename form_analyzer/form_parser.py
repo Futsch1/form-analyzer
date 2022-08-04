@@ -1,5 +1,6 @@
 import glob
 import json
+import logging
 import os
 import typing
 from dataclasses import dataclass
@@ -71,6 +72,10 @@ def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> Pa
 
 def parse(path: str, form_pages: FormPages) -> typing.List[ParsedForm]:
     file_names = sorted(glob.glob(path + '/*.json'))
+
+    from form_analyzer import form_analyzer_logger
+
+    form_analyzer_logger.log(logging.INFO, f'Loading textract data for {len(file_names)} pages')
 
     if form_pages.pages == 0:
         form_pages.pages = len(file_names)
