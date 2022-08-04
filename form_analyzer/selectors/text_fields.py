@@ -13,7 +13,8 @@ class TextField(Selector):
     :param filter_: Filter
     """
     def __init__(self, label: str, filter_: Filter):
-        self.label = simple_str(label)
+        self.label = label
+        self.simple_label = simple_str(label)
         self.filter = filter_
 
     def headers(self) -> typing.List[str]:
@@ -45,7 +46,7 @@ class TextField(Selector):
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
 
-            if self.label in simple_str(tx_field.key.text) and tx_field.value is not None:
+            if self.simple_label in simple_str(tx_field.key.text) and tx_field.value is not None:
                 form_value = self.__form_value_from_match(field_with_page)
                 break
 
@@ -64,7 +65,8 @@ class TextFieldWithCheckbox(Selector):
     :param separator: Separator between the checkbox with label and the free text, default ':'
     """
     def __init__(self, label: str, filter_: Filter, separator: str = ':'):
-        self.label = simple_str(label)
+        self.label = label
+        self.simple_label = simple_str(label)
         self.separator = separator
         self.filter = filter_
 
@@ -93,7 +95,7 @@ class TextFieldWithCheckbox(Selector):
 
         for field_with_page in filtered_fields:
             tx_field = field_with_page.field
-            if self.label in simple_str(tx_field.key.text):
+            if self.simple_label in simple_str(tx_field.key.text):
                 form_value = self.__form_value_from_match(field_with_page)
                 break
 
