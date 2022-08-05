@@ -47,6 +47,7 @@ class MultiSelect(Select):
 
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         matches = self.__populate_matches(len(self.selections) + 1)
+        matches[0].page = form_fields[0].page
 
         simple_fields = self._get_filtered_fields(form_fields)
         self._match_selections(simple_fields)
