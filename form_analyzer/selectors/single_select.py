@@ -2,7 +2,7 @@ import typing
 
 from form_analyzer.filters import Filter
 from form_analyzer.form_parser import FieldList
-from form_analyzer.selectors.base import FormValue, Match
+from form_analyzer.selectors.base import FormValue, Match, SimpleField
 from form_analyzer.selectors.select_base import Select
 from form_analyzer.selectors.text_fields import TextField, TextFieldWithCheckbox
 
@@ -41,6 +41,24 @@ class SingleSelect(Select):
                 select_index = None
         return select_index
 
+    def __get_value_if_no_selection(self, form_fields: FieldList, simple_fields: typing.List[SimpleField]) -> FormValue:
+        # No selection found, try alternatives
+        not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
+
+        # Alternative field given, take that one.
+        alternative = self.alternative.values(form_fields)[0]if self.alternative is not None else None
+
+        if alternative is None or not len(alternative.value):
+            if self.selection_matches.count(not_found_match) == 1:
+                select_index = self.selection_matches.index(not_found_match)
+                return_value = self.__form_value_from_match(select_index)
+            else:
+                return_value = FormValue('', simple_fields[0].page, self.selection_matches.count(not_found_match) > 1)
+        else:
+            return_value = alternative
+
+        return return_value
+
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         simple_fields = self._get_filtered_fields(form_fields)
         self._match_selections(simple_fields)
@@ -51,19 +69,7 @@ class SingleSelect(Select):
         if select_index is not None:
             return_value = [self.__form_value_from_match(select_index)]
         else:
-            # No selection found, try alternatives
-            not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
-
-            # Alternative field given, take that one.
-            if self.alternative is not None:
-                return_value = [self.alternative.values(form_fields)[0]]
-
-            elif self.selection_matches.count(not_found_match) == 1:
-                select_index = self.selection_matches.index(not_found_match)
-                return_value = [self.__form_value_from_match(select_index)]
-
-            else:
-                return_value = [FormValue('', simple_fields[0].page, self.selection_matches.count(not_found_match) > 1)]
+            return_value = [self.__get_value_if_no_selection(form_fields, simple_fields)]
 
         if self.additional is not None:
             return_value.append(self.additional.values(form_fields)[0])
