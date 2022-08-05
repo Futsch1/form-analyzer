@@ -61,7 +61,7 @@ def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> Pa
     doc = trp.Document(responses)
     for page, words in zip(doc.pages, form_pages.words_on_page):
         page: trp.Page
-        assert __is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in page {page}'
+        assert __is_any_word_in_blocks(page.blocks, words), f'Words {words} not found in files {file_names}\n{page}'
 
     fields: FieldList = []
     for page_num, page in enumerate(doc.pages):
@@ -84,5 +84,5 @@ def parse(path: str, form_pages: FormPages) -> typing.List[ParsedForm]:
         if len(file_names) == 0:
             raise FileNotFoundError(f'No textract JSON result files found in {path}')
 
-    return [__get_parsed_form(file_names[i:i + form_pages.pages], form_pages)
-            for i in range(0, len(file_names), form_pages.pages)]
+    for i in range(0, len(file_names), form_pages.pages):
+        yield __get_parsed_form(file_names[i:i + form_pages.pages], form_pages)
