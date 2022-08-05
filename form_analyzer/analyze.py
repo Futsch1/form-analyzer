@@ -120,14 +120,16 @@ class FormToSheet:
         self.uncertain_fields += len(uncertain_fields)
 
 
-def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None):
+def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None, target_directory = None):
     """
     Dumps the analyzed fields from AWS Textract to text files to support debugging.
 
     :param form_folder: Folder with the AWS Textract result files
     :param form_description_module_name: Optional form description module name
+    :param target_directory: Optional target directory for the dumped files
     """
     form_pages, _ = __get_form(form_description_module_name)
+    form_pages.words_on_page = []
     parsed_forms = form_parser.parse(form_folder, form_pages)
 
     from form_analyzer import form_analyzer_logger
@@ -142,7 +144,9 @@ def dump_fields(form_folder: str, form_description_module_name: typing.Optional[
             lines.append(f'{field_with_page.page} {tx_field.key.text}: {tx_field.geometry.boundingBox.left} '
                          f'{tx_field.geometry.boundingBox.top} {value} {tx_field.confidence}')
 
-        with open(f'{form_folder}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
+        if target_directory is None:
+            target_directory = form_folder
+        with open(f'{target_directory}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
             f.write('\n'.join(lines))
 
 
