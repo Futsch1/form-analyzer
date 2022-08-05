@@ -41,14 +41,17 @@ class TextField(Selector):
 
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         filtered_fields = self.filter.filter(form_fields)
-        form_value = FormValue('', filtered_fields[0].page, False)
+        if len(filtered_fields):
+            form_value = FormValue('', filtered_fields[0].page, False)
 
-        for field_with_page in filtered_fields:
-            tx_field = field_with_page.field
+            for field_with_page in filtered_fields:
+                tx_field = field_with_page.field
 
-            if self.simple_label in simple_str(tx_field.key.text) and tx_field.value is not None:
-                form_value = self.__form_value_from_match(field_with_page)
-                break
+                if self.simple_label in simple_str(tx_field.key.text) and tx_field.value is not None:
+                    form_value = self.__form_value_from_match(field_with_page)
+                    break
+        else:
+            form_value = FormValue('', 0, True)
 
         return [form_value]
 
@@ -80,7 +83,11 @@ class TextFieldWithCheckbox(Selector):
         if tx_field.value is not None and tx_field.value.text not in ['NOT_SELECTED', 'SELECTED']:
             v = tx_field.value.text.strip()
         else:
-            v = tx_field.key.text.split(self.separator)[1]
+            if self.separator in tx_field.key.text:
+                v = tx_field.key.text.split(self.separator)[1]
+            else:
+                v = tx_field.key.text
+                uncertain = True
 
         if len(v) > 8:
             uncertain = True
@@ -126,7 +133,7 @@ class Number(TextField):
         if len(number_value.value):
             value = ''.join(list(filter(str.isdecimal, number_value.value.replace('O', '0'))))
             if self.min_digits > len(value) or self.max_digits < len(value):
-                return [FormValue('', number_value.page, True)]
+                return [FormValue('???', number_value.page, True)]
         else:
             return [FormValue('', number_value.page, True)]
 
