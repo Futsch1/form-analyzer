@@ -41,7 +41,7 @@ class MultiSelect(Select):
         return match_found
 
     def __get_uncertain_selected(self) -> FormValue:
-        return FormValue('1', self.selection_matches[0].page, True)
+        return FormValue('1', self.__get_first_found_page(), True)
 
     def __get_first_found_page(self) -> int:
         for selection_match in self.selection_matches:
