@@ -27,7 +27,7 @@ class FormValue:
 class SimpleField:
     def __init__(self, field_with_page: FieldWithPage):
         self.key = simple_str(field_with_page.field.key.text)
-        self.selected = field_with_page.field.value.text != 'NOT_SELECTED' if field_with_page.field.value else True
+        self.selected = field_with_page.field.value.text == 'SELECTED' if field_with_page.field.value else False
         self.uncertain = field_with_page.field.confidence < 40
         self.page = field_with_page.page
 
