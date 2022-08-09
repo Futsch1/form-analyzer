@@ -35,7 +35,20 @@ class MultiSelect(Select):
             if match.match in [Match.EXACT_SELECTED, Match.SIMILAR_SELECTED]:
                 matches[index + 1] = FormValue('1', match.page, match.uncertain)
                 match_found = True
+            else:
+                matches[index + 1].page = match.page
+
         return match_found
+
+    def __get_uncertain_selected(self) -> FormValue:
+        return FormValue('1', self.selection_matches[0].page, True)
+
+    def __get_first_found_page(self) -> int:
+        for selection_match in self.selection_matches:
+            if selection_match.match != Match.NOT_FOUND:
+                return selection_match.page
+
+        return 0
 
     @staticmethod
     def __populate_matches(num_matches: int):
@@ -47,19 +60,20 @@ class MultiSelect(Select):
 
     def values(self, form_fields: FieldList) -> typing.List[FormValue]:
         matches = self.__populate_matches(len(self.selections) + 1)
-        matches[0].page = form_fields[0].page
 
         simple_fields = self._get_filtered_fields(form_fields)
         self._match_selections(simple_fields)
 
         any_found = self.__check_exact_or_part_match(matches)
+        matches[0].page = self.__get_first_found_page()
 
         # If no matches were found, the matching item might be not detected - but only if there are some missing
         not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
-        if not any_found and self.selection_matches.count(not_found_match) > 0:
-            matches[0].uncertain = True
+        if not any_found and self.selection_matches.count(not_found_match) == 1:
+            select_index = self.selection_matches.index(not_found_match)
+            matches[select_index + 1] = self.__get_uncertain_selected()
 
-        if self.selection_matches.count(not_found_match) > 2:
+        if self.selection_matches.count(not_found_match) >= 2:
             matches[0].uncertain = True
 
         if self.alternative is not None:
