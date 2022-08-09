@@ -46,14 +46,15 @@ class SingleSelect(Select):
         not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
 
         # Alternative field given, take that one.
-        alternative = self.alternative.values(form_fields)[0]if self.alternative is not None else None
+        alternative = self.alternative.values(form_fields)[0] if self.alternative is not None else None
 
         if alternative is None or not len(alternative.value):
             if self.selection_matches.count(not_found_match) == 1:
                 select_index = self.selection_matches.index(not_found_match)
                 return_value = self.__form_value_from_match(select_index)
+                return_value.page = self._get_first_found_page()
             else:
-                return_value = FormValue('', simple_fields[0].page, self.selection_matches.count(not_found_match) > 1)
+                return_value = FormValue('', self._get_first_found_page(), self.selection_matches.count(not_found_match) > 1)
         else:
             return_value = alternative
 

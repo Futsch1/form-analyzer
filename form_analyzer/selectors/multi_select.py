@@ -41,14 +41,7 @@ class MultiSelect(Select):
         return match_found
 
     def __get_uncertain_selected(self) -> FormValue:
-        return FormValue('1', self.__get_first_found_page(), True)
-
-    def __get_first_found_page(self) -> int:
-        for selection_match in self.selection_matches:
-            if selection_match.match != Match.NOT_FOUND:
-                return selection_match.page
-
-        return 0
+        return FormValue('1', self._get_first_found_page(), True)
 
     @staticmethod
     def __populate_matches(num_matches: int):
@@ -65,7 +58,7 @@ class MultiSelect(Select):
         self._match_selections(simple_fields)
 
         any_found = self.__check_exact_or_part_match(matches)
-        matches[0].page = self.__get_first_found_page()
+        matches[0].page = self._get_first_found_page()
 
         # If no matches were found, the matching item might be not detected - but only if there are some missing
         not_found_match = Select.SelectionMatch(Match.NOT_FOUND)

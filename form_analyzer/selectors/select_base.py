@@ -80,3 +80,10 @@ class Select(Selector, ABC):
                     not self.__check_similar_match(simple_selection, index, simple_fields) and \
                     len(selection) > 15:
                 self.__check_part_match(simple_selection, index, simple_fields)
+
+    def _get_first_found_page(self) -> int:
+        for selection_match in self.selection_matches:
+            if selection_match.match != Match.NOT_FOUND:
+                return selection_match.page
+
+        return 0
