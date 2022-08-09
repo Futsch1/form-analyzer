@@ -33,7 +33,7 @@ class MultiSelect(Select):
         match_found = False
         for index, match in enumerate(self.selection_matches):
             if match.match in [Match.EXACT_SELECTED, Match.SIMILAR_SELECTED]:
-                matches[index + 1] = FormValue('1', match.page, match.uncertain)
+                matches[index + 1] = FormValue('1' + ('?' if match.uncertain else ''), match.page, match.uncertain)
                 match_found = True
             else:
                 matches[index + 1].page = match.page
@@ -41,7 +41,7 @@ class MultiSelect(Select):
         return match_found
 
     def __get_uncertain_selected(self) -> FormValue:
-        return FormValue('1', self._get_first_found_page(), True)
+        return FormValue('1?', self._get_first_found_page(), True)
 
     @staticmethod
     def __populate_matches(num_matches: int):
