@@ -144,7 +144,7 @@ TextFieldWithCheckbox.
 Note that all text matching will be done case-insensitive and with a certain fuzziness, so that
 no exact match is required.
 
-See also (the documentation)[https://form-analyzer.readthedocs.io/en/latest/selectors.html].
+See also [the documentation](https://form-analyzer.readthedocs.io/en/latest/selectors.html).
 
 #### Filters
 
@@ -164,7 +164,7 @@ for text and number fields.
 Note that when working with location filters and scanned form pages, the position of certain fields on
 the page must be similar for each scan.
 
-See also (the documentation)[https://form-analyzer.readthedocs.io/en/latest/filters.html].
+See also [the documentation](https://form-analyzer.readthedocs.io/en/latest/filters.html).
 
 #### Examples
 
