@@ -6,7 +6,6 @@ import typing
 from concurrent.futures import ThreadPoolExecutor
 
 import boto3
-from botocore.client import BaseClient
 
 
 class AWSTextract:
@@ -70,6 +69,7 @@ class AWSTextract:
                  'Name': s3_file_name
                  }
         }
+
 
 def run_textract(folder: str,
                  aws_region_name: str = None,
