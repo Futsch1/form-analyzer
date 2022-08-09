@@ -120,7 +120,7 @@ class FormToSheet:
         self.uncertain_fields += len(uncertain_fields)
 
 
-def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None, target_directory = None):
+def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None, target_directory: str = None):
     """
     Dumps the analyzed fields from AWS Textract to text files to support debugging.
 
@@ -176,7 +176,7 @@ def analyze(form_folder: str, form_description_module_name: str, excel_file_name
 
         form_to_sheet.add_parsed_form(form_name, parsed_form)
 
-    form_analyzer_logger.log(logging.DEBUG,
+    form_analyzer_logger.log(logging.INFO,
                              f'Found {form_to_sheet.uncertain_fields} uncertain fields in total '
                              f'{form_to_sheet.num_fields} fields')
 
