@@ -45,7 +45,7 @@ jobs:
           path: coverage/index.html
 
   release:
-    name: Release to PyPI
+    name: Build wheel
     needs: [ build ]
     runs-on: ubuntu-latest
 
@@ -75,7 +75,7 @@ jobs:
           skip_existing: true
           password: ${{ secrets.pypi_password }}
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags')
         id: create_release
         uses: actions/create-release@v1
         env:
