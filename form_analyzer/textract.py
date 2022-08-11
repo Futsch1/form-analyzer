@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import typing
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import boto3
 
@@ -90,10 +90,12 @@ def run_textract(folder: str,
     :param s3_bucket_name: Optional S3 bucket name, if given, the function will upload the files to S3
     :param s3_folder: S3 bucket folder name, defaults to ''
     """
-    executor = ThreadPoolExecutor()
-    textract = AWSTextract(aws_region_name, aws_access_key_id, aws_secret_access_key, s3_bucket_name, s3_folder)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        textract = AWSTextract(aws_region_name, aws_access_key_id, aws_secret_access_key, s3_bucket_name, s3_folder)
+        futures = []
 
-    for file_name in sorted(glob.glob(f'{folder}/*.png')):
-        executor.submit(textract.query_aws, file_name)
+        for file_name in sorted(glob.glob(f'{folder}/*.png')):
+            futures.append(executor.submit(textract.query_aws, file_name))
 
-    executor.shutdown(wait=True)
+        for future in as_completed(futures):
+            future.result()
