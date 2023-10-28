@@ -70,8 +70,8 @@ def __get_parsed_form(file_names: typing.List[str], form_pages: FormPages) -> Pa
     return ParsedForm(base_file_names, fields)
 
 
-def parse(path: str, form_pages: FormPages) -> typing.List[ParsedForm]:
-    file_names = sorted(glob.glob(path + '/*.json'))
+def parse(path_or_file: str, form_pages: FormPages) -> typing.List[ParsedForm]:
+    file_names = sorted(glob.glob(path_or_file + '/*.json')) if os.path.isdir(path_or_file) else [path_or_file]
 
     from form_analyzer import form_analyzer_logger
 
@@ -82,7 +82,7 @@ def parse(path: str, form_pages: FormPages) -> typing.List[ParsedForm]:
         form_pages.words_on_page = [] * len(file_names)
     else:
         if len(file_names) == 0:
-            raise FileNotFoundError(f'No textract JSON result files found in {path}')
+            raise FileNotFoundError(f'No textract JSON result files found in {path_or_file}')
 
     for i in range(0, len(file_names), form_pages.pages):
         yield __get_parsed_form(file_names[i:i + form_pages.pages], form_pages)

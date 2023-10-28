@@ -71,19 +71,19 @@ class AWSTextract:
         }
 
 
-def run_textract(folder: str,
+def run_textract(folder_or_png_file: str,
                  aws_region_name: str = None,
                  aws_access_key_id: str = None,
                  aws_secret_access_key: str = None,
                  s3_bucket_name: str = None,
                  s3_folder: str = ''):
     """
-    Run AWS Textract on all PNG files in a folder.
+    Run AWS Textract on all PNG files in a folder or on a single PNG file.
 
     The function can either upload all files to an S3 bucket and process them from there or upload them directly to Textract. The analysis results are saved
     as JSON files. If a result JSON already exists for a PNG file, it will not be analyzed again.
 
-    :param folder: PNG folder name
+    :param folder_or_png_file: PNG folder name or single PNG file
     :param aws_region_name: Optional AWS region name
     :param aws_access_key_id: Optional AWS access key ID
     :param aws_secret_access_key: Optional AWS secret access key
@@ -94,7 +94,7 @@ def run_textract(folder: str,
         textract = AWSTextract(aws_region_name, aws_access_key_id, aws_secret_access_key, s3_bucket_name, s3_folder)
         futures = []
 
-        for file_name in sorted(glob.glob(f'{folder}/*.png')):
+        for file_name in sorted(glob.glob(f'{folder_or_png_file}/*.png')) if os.path.isdir(folder_or_png_file) else [folder_or_png_file]:
             futures.append(executor.submit(textract.query_aws, file_name))
 
         for future in as_completed(futures):

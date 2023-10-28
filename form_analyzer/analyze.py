@@ -1,4 +1,5 @@
 import logging
+import os
 import typing
 from dataclasses import dataclass
 
@@ -120,21 +121,21 @@ class FormToSheet:
         self.uncertain_fields += len(uncertain_fields)
 
 
-def dump_fields(form_folder: str, form_description_module_name: typing.Optional[str] = None, target_directory: str = None):
+def dump_fields(form_folder_or_json_file: str, form_description_module_name: typing.Optional[str] = None, target_directory: str = None):
     """
     Dumps the analyzed fields from AWS Textract to text files to support debugging.
 
-    :param form_folder: Folder with the AWS Textract result files
+    :param form_folder_or_json_file: Folder with the AWS Textract result files or a AWS Textract result file
     :param form_description_module_name: Optional form description module name
     :param target_directory: Optional target directory for the dumped files
     """
     form_pages, _ = __get_form(form_description_module_name)
     form_pages.words_on_page = []
-    parsed_forms = form_parser.parse(form_folder, form_pages)
+    parsed_forms = form_parser.parse(form_folder_or_json_file, form_pages)
 
     from form_analyzer import form_analyzer_logger
 
-    form_analyzer_logger.log(logging.INFO, f'Dumping fields to {form_folder}')
+    form_analyzer_logger.log(logging.INFO, f'Dumping fields to {form_folder_or_json_file}')
 
     for parsed_form in parsed_forms:
         lines = []
@@ -145,17 +146,17 @@ def dump_fields(form_folder: str, form_description_module_name: typing.Optional[
                          f'{tx_field.geometry.boundingBox.top} {value} {tx_field.confidence}')
 
         if target_directory is None:
-            target_directory = form_folder
+            target_directory = os.path.dirname(form_folder_or_json_file)
         with open(f'{target_directory}/fields{parsed_form.page_files[0]}.txt', 'w') as f:
             f.write('\n'.join(lines))
 
 
-def analyze(form_folder: str, form_description_module_name: str, excel_file_name: str = 'results'):
+def analyze(form_folder_or_json_file: str, form_description_module_name: str, excel_file_name: str = 'results'):
     """
     Analyzes the AWS Textract results in a folder based on a given form description and writes the results to
     an Excel file.
 
-    :param form_folder: Folder with the AWS Textract result files
+    :param form_folder_or_json_file: Folder with the AWS Textract result files or a AWS Textract result file
     :param form_description_module_name: Name of the form description Python module
     :param excel_file_name: Name of the result Excel file, default is 'results'
     """
@@ -163,7 +164,7 @@ def analyze(form_folder: str, form_description_module_name: str, excel_file_name
 
     form_pages, form_fields = __get_form(form_description_module_name)
 
-    parsed_forms = form_parser.parse(form_folder, form_pages)
+    parsed_forms = form_parser.parse(form_folder_or_json_file, form_pages)
 
     wb = __prepare_workbook(form_fields)
     sheet = wb.active
@@ -183,6 +184,6 @@ def analyze(form_folder: str, form_description_module_name: str, excel_file_name
     sheet.freeze_panes = "A2"
     sheet.print_title_rows = '1:1'
 
-    results_file = f'{form_folder}/{excel_file_name}.xlsx'
+    results_file = f'{os.path.dirname(form_folder_or_json_file)}/{excel_file_name}.xlsx'
     form_analyzer_logger.log(logging.INFO, f'Finished. Results saved in {results_file}')
     wb.save(results_file)
