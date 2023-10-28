@@ -41,4 +41,6 @@ def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
         for page_index, image in enumerate(pages):
             processed_images = image_processor(page_index, image)
             for processed_image in processed_images:
+                if processed_image is None:
+                    continue
                 processed_image.image.save(f'{file_name_without_ext}_{page_index}{processed_image.extension}.png')
