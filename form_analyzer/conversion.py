@@ -18,7 +18,7 @@ ImageProcessor = typing.Callable[[int, Image], typing.List[ProcessedImage]]
 
 
 def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
-                 image_processor: ImageProcessor = lambda image_index, img: [(str(image_index + 1), img)]):
+                 image_processor: ImageProcessor = lambda image_index, img: [ProcessedImage(img, '')]):
     """
     Converts PDF files in a folder to PNG images.
 
@@ -41,4 +41,4 @@ def pdf_to_image(folder: str, dpi: int = 400, poppler_path: str = None,
         for page_index, image in enumerate(pages):
             processed_images = image_processor(page_index, image)
             for processed_image in processed_images:
-                processed_image.image.save(f'{file_name_without_ext}_{page_index}_{processed_image.extension}.png')
+                processed_image.image.save(f'{file_name_without_ext}_{page_index}{processed_image.extension}.png')
