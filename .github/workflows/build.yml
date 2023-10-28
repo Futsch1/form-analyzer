@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.7", $LATEST_PYTHON ]
+        python-version: [ "3.7", ${{ env.LATEST_PYTHON }} ]
 
     steps:
       - uses: actions/checkout@v3
@@ -37,11 +37,11 @@ jobs:
           coverage html -d coverage
 
       - name: Coveralls
-        if: ${{ matrix.python-version }} == $LATEST_PYTHON
+        if: ${{ matrix.python-version }} == ${{ env.LATEST_PYTHON }}
         uses: AndreMiras/coveralls-python-action@develop
 
       - name: Upload test results
-        if: ${{ matrix.python-version }} == $LATEST_PYTHON
+        if: ${{ matrix.python-version }} == ${{ env.LATEST_PYTHON }}
         uses: actions/upload-artifact@v2
         with:
           name: coverage-report
@@ -55,10 +55,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Set up Python $LATEST_PYTHON
+      - name: Set up Python ${{ env.LATEST_PYTHON }}
         uses: actions/setup-python@v3
         with:
-          python-version: $LATEST_PYTHON
+          python-version: ${{ env.LATEST_PYTHON }}
       - name: Install pypa/build
         run: |
           python -m pip install build --user
