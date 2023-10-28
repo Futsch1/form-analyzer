@@ -6,12 +6,22 @@ env:
     LATEST_PYTHON: 3.11
 
 jobs:
+  get-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      python-matrix: ${{ steps.get-python-versions-action.outputs.latest-python-versions }}
+    steps:
+      - uses: snok/latest-python-versions@v1
+        id: get-python-versions-action
+        with:
+          min-version: 3.8
+
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.7", ${{ env.LATEST_PYTHON }} ]
+        python-version: [ "3.7", ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }} ]
 
     steps:
       - uses: actions/checkout@v3
@@ -37,11 +47,11 @@ jobs:
           coverage html -d coverage
 
       - name: Coveralls
-        if: ${{ matrix.python-version }} == ${{ env.LATEST_PYTHON }}
+        if: ${{ matrix.python-version }} == ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }}
         uses: AndreMiras/coveralls-python-action@develop
 
       - name: Upload test results
-        if: ${{ matrix.python-version }} == ${{ env.LATEST_PYTHON }}
+        if: ${{ matrix.python-version }} == ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }}
         uses: actions/upload-artifact@v2
         with:
           name: coverage-report
@@ -55,10 +65,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Set up Python ${{ env.LATEST_PYTHON }}
+      - name: Set up Python ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }}
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ env.LATEST_PYTHON }}
+          python-version: ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }}
       - name: Install pypa/build
         run: |
           python -m pip install build --user
