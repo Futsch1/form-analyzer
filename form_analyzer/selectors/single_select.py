@@ -41,7 +41,7 @@ class SingleSelect(Select):
                 select_index = None
         return select_index
 
-    def __get_value_if_no_selection(self, form_fields: FieldList, simple_fields: typing.List[SimpleField]) -> FormValue:
+    def __get_value_if_no_selection(self, form_fields: FieldList) -> FormValue:
         # No selection found, try alternatives
         not_found_match = Select.SelectionMatch(Match.NOT_FOUND)
 
@@ -70,7 +70,7 @@ class SingleSelect(Select):
         if select_index is not None:
             return_value = [self.__form_value_from_match(select_index)]
         else:
-            return_value = [self.__get_value_if_no_selection(form_fields, simple_fields)]
+            return_value = [self.__get_value_if_no_selection(form_fields)]
 
         if self.additional is not None:
             return_value.append(self.additional.values(form_fields)[0])
