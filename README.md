@@ -49,7 +49,7 @@ form-analyzer can convert PDF input files to properly named PNG files ready for 
 page can optionally be post-processed by a custom function to split pages.
 
 Create a Python script like this to convert single page PDF files (assuming that the PDFs are located
-in the folder "questionnaires":
+in the folder "questionnaires"):
 
 ```python
 import form_analyzer
@@ -57,7 +57,7 @@ import form_analyzer
 form_analyzer.pdf_to_image('questionnaires')
 ```
 
-The following example shows how to split a single PDF page into two images:
+The following example shows how to split a single PDF page into two images and how to return only the first page:
 
 ```python
 import form_analyzer
@@ -71,11 +71,14 @@ def one_page_to_two(_: int, image):
 
 
 form_analyzer.pdf_to_image('questionnaires', image_processor=one_page_to_two)
+
+form_analyzer.pdf_to_image('questionnaires', 
+                           image_processor=lambda image_index, image: [form_analyzer.ProcessedImage(image, '') if image_index == 0 else None])
 ```
 
 The argument image_processor specifies a function that receives the current PDF page number (starting with 0)
 and an [Image](https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image) object.
-It returns a list of form_analyzer.ProcessedImage objects that contain an Image object and a file name suffix.
+It returns a list of form_analyzer.ProcessedImage objects that contain an Image object and a file name suffix. The list may also contain `None`, in which case the entry is skipped.
 
 The resulting images are stored in the same folder as the PDF source files.
 
@@ -98,6 +101,23 @@ form_analyzer.run_textract('questionnaires')
 
 The result data is saved as JSON files in the target folder. Before using AWS Textract, the
 function checks if result data is already present. If that is the case, the Textract call is skipped.
+
+### Work with Textract only
+
+If you do not need the form processing, you can also directly use the generated JSON files with [Textract Response Parser](https://pypi.org/project/amazon-textract-response-parser/).
+
+```python
+import glob
+import json
+import trp
+
+for file_name in glob.glob('*.json'):
+    with open(file_name) as f:
+        doc = trp.Document([json.load(f)])
+
+    for block in doc.blocks[0]['Blocks']:
+        print(block.get('Text'))
+```
 
 ## Form description
 
